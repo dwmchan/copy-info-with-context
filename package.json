@@ -1,0 +1,205 @@
+{
+  "name": "copy-with-context",
+  "displayName": "Copy with Context",
+  "description": "Copy code snippets with intelligent contextual information - filename, line numbers, and smart path detection for structured data. Perfect for documentation, code reviews, debugging, and sharing code with proper attribution.",
+  "version": "1.0.0",
+  "publisher": "Donald Chan",
+  "author": {
+    "name": "Donald Chan",
+    "email": "donald@iendeavour.com.au"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dwmchan/copy-with-context.git"
+  },
+  "homepage": "https://github.com/dwmchan/copy-with-context#readme",
+  "bugs": {
+    "url": "https://github.com/dwmchan/copy-with-context/issues"
+  },
+  "keywords": [
+    "copy",
+    "snippet",
+    "context",
+    "line-numbers",
+    "json-path",
+    "xml-path",
+    "function-context",
+    "code-sharing",
+    "documentation",
+    "syntax-highlighting",
+    "javascript",
+    "typescript", 
+    "python",
+    "csharp",
+    "xml",
+    "html",
+    "css",
+    "scss",
+    "sass",
+    "less",
+    "yaml",
+    "csv",
+    "tsv",
+    "psv",
+    "delimited",
+    "data-files",
+    "color-coding"
+  ],
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "copyWithContext.copySelection",
+        "title": "Copy with Context",
+        "category": "Copy with Context"
+      },
+      {
+        "command": "copyWithContext.copySelectionCustom",
+        "title": "Copy with Context (Custom Format)",
+        "category": "Copy with Context"
+      },
+      {
+        "command": "copyWithContext.copySelectionHTML",
+        "title": "Copy with Context (Colored HTML)",
+        "category": "Copy with Context"
+      }
+    ],
+    "configuration": {
+      "title": "Copy with Context",
+      "properties": {
+        "copyWithContext.showLineNumbers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show line numbers on each line of copied code"
+        },
+        "copyWithContext.lineNumberPadding": {
+          "type": "boolean",
+          "default": false,
+          "description": "Add padding to line numbers for consistent alignment"
+        },
+        "copyWithContext.showContextPath": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show contextual path information (JSON paths, XML paths, function/class names)"
+        },
+        "copyWithContext.enableColorCoding": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable syntax highlighting/color coding in copied text (HTML format)"
+        },
+        "copyWithContext.colorTheme": {
+          "type": "string",
+          "enum": ["dark", "light"],
+          "default": "dark",
+          "description": "Color theme for syntax highlighting (dark or light)"
+        },
+        "copyWithContext.showArrayIndices": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show array indices in context paths (e.g., users[0], items[1])"
+        },
+        "copyWithContext.maxFileSize": {
+          "type": "number",
+          "default": 5000000,
+          "minimum": 100000,
+          "maximum": 50000000,
+          "description": "Maximum file size to process (bytes). Files larger than this will show a warning."
+        },
+        "copyWithContext.xmlIndexingMode": {
+          "type": "string",
+          "enum": ["local", "global"],
+          "enumDescriptions": [
+            "Count within parent container (Party[0], Party[1] per Parties container)",
+            "Count across entire document (Party[0] through Party[N] globally)"
+          ],
+          "default": "local",
+          "description": "XML element indexing mode: 'local' counts within parent container, 'global' counts across entire document"
+        },
+        "copyWithContext.largeFileLineThreshold": {
+          "type": "number",
+          "default": 20000,
+          "minimum": 5000,
+          "maximum": 50000,
+          "description": "Line count threshold for performance mode (skips complex indexing for large files)"
+        },
+          "copyWithContext.largeFileCharThreshold": {
+            "type": "number",
+            "default": 100000,
+            "minimum": 10000,
+            "maximum": 1000000,
+            "description": "Character count threshold for performance mode"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "copyWithContext.copySelection",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "copyWithContext.copySelectionHTML",
+        "key": "ctrl+alt+h",
+        "mac": "cmd+alt+h", 
+        "when": "editorTextFocus"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "copyWithContext.copySelection",
+          "when": "editorHasSelection",
+          "group": "9_cutcopypaste@2"
+        },
+        {
+          "command": "copyWithContext.copySelectionHTML",
+          "when": "editorHasSelection", 
+          "group": "9_cutcopypaste@3"
+        },
+        {
+          "command": "copyWithContext.copySelectionCustom",
+          "when": "editorHasSelection",
+          "group": "9_cutcopypaste@4"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "npm run compile && node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@types/mocha": "^10.0.1",
+    "@types/glob": "^8.0.0",
+    "@vscode/test-electron": "^2.3.4",
+    "@vscode/vsce": "^2.19.0",
+    "typescript": "^4.9.4",
+    "eslint": "^8.28.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.2.0"
+  }
+}
