@@ -628,14 +628,220 @@ function getJsonPath(document: vscode.TextDocument, position: vscode.Position): 
     }, null, 'JSON path detection');
 }
 
-function getDocumentContext(document: vscode.TextDocument, position: vscode.Position): string | null {
-       // Performance check: skip complex indexing for large files
-    if (shouldSkipIndexing(document)) {
-        console.log(`Large file detected (${document.lineCount} lines) - using performance mode`);
-        return getBasicDocumentContext(document);
-    }
+// Enhanced XSD path detection
+function getXsdPath(document: vscode.TextDocument, position: vscode.Position): string | null {
+    return safeExecute(() => {
+        const text = document.getText();
+        const lines = text.split('\n');
+        const currentLine = position.line;
+        
+        const tagStack: Array<{name: string, xsdName?: string, index: number}> = [];
+        
+        // Parse from beginning through current position to build XSD path
+        for (let i = 0; i <= currentLine; i++) {
+            const line = lines[i];
+            if (!line) continue;
+            
+            const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9-_:]*)[^>]*>/g;
+            let match;
+            
+            while ((match = tagRegex.exec(line)) !== null) {
+                // For current line, stop processing tags that start after cursor position
+                if (i === currentLine && match.index > position.character) {
+                    break;
+                }
+                
+                const fullTag = match[0];
+                const tagName = match[1];
+                
+                // Ensure tagName is defined
+                if (!tagName) continue;
+                
+                if (fullTag.startsWith('</')) {
+                    // Closing tag
+                    tagStack.pop();
+                } else if (!fullTag.endsWith('/>')) {
+                    // Opening tag (not self-closing)
+                    const siblingIndex = countXsdSiblingsBeforePosition(text, tagName, tagStack.length, i, match.index);
+                    
+                    // Create tag entry - only include xsdName if it exists
+                    const tagEntry: {name: string, xsdName?: string, index: number} = {
+                        name: tagName,
+                        index: siblingIndex
+                    };
+                    
+                    // Extract name attribute if this is an XSD element
+                    if (isXsdElement(tagName)) {
+                        const xsdName = extractNameAttribute(fullTag);
+                        if (xsdName) {
+                            tagEntry.xsdName = xsdName;
+                        }
+                    }
+                    
+                    tagStack.push(tagEntry);
+                }
+            }
+        }
+        
+        // Special case: check if there's an XSD element starting on the current line at or after cursor position
+        // This handles cases where cursor is at the beginning of an element tag
+        const currentLineText = lines[currentLine];
+        if (currentLineText) {
+            const afterCursorText = currentLineText.substring(position.character);
+            const elementMatch = afterCursorText.match(/^[^<]*<(xs:element|element)\s+name\s*=\s*["']([^"']+)["']/);
+            
+            if (elementMatch) {
+                const tagName = elementMatch[1];
+                const xsdName = elementMatch[2];
+                
+                // Add this element to the path
+                const displayName = `${tagName}(${xsdName})`;
+                
+                // Build complete path
+                const pathParts: string[] = [];
+                
+                // Add parent elements
+                for (const tag of tagStack) {
+                    let parentDisplayName = tag.name;
+                    if (tag.xsdName) {
+                        parentDisplayName = `${tag.name}(${tag.xsdName})`;
+                    }
+                    if (tag.index > 0) {
+                        pathParts.push(`${parentDisplayName}[${tag.index}]`);
+                    } else {
+                        pathParts.push(parentDisplayName);
+                    }
+                }
+                
+                // Add current element
+                pathParts.push(displayName);
+                return pathParts.join(' > ');
+            }
+            
+            // Also check if cursor is anywhere within an element tag on current line
+            const beforeAndAtCursorText = currentLineText.substring(0, position.character + 1);
+            const reverseElementMatch = beforeAndAtCursorText.match(/<(xs:element|element)\s+name\s*=\s*["']([^"']+)["'][^>]*$/);
+            
+            if (reverseElementMatch) {
+                const tagName = reverseElementMatch[1];
+                const xsdName = reverseElementMatch[2];
+                
+                // Add this element to the path
+                const displayName = `${tagName}(${xsdName})`;
+                
+                // Build complete path
+                const pathParts: string[] = [];
+                
+                // Add parent elements
+                for (const tag of tagStack) {
+                    let parentDisplayName = tag.name;
+                    if (tag.xsdName) {
+                        parentDisplayName = `${tag.name}(${tag.xsdName})`;
+                    }
+                    if (tag.index > 0) {
+                        pathParts.push(`${parentDisplayName}[${tag.index}]`);
+                    } else {
+                        pathParts.push(parentDisplayName);
+                    }
+                }
+                
+                // Add current element
+                pathParts.push(displayName);
+                return pathParts.join(' > ');
+            }
+        }
+        
+        // Fallback: return parent path
+        if (tagStack.length === 0) {
+            return null;
+        }
+        
+        const pathParts: string[] = [];
+        for (const tag of tagStack) {
+            let displayName = tag.name;
+            if (tag.xsdName) {
+                displayName = `${tag.name}(${tag.xsdName})`;
+            }
+            if (tag.index > 0) {
+                pathParts.push(`${displayName}[${tag.index}]`);
+            } else {
+                pathParts.push(displayName);
+            }
+        }
+        
+        return pathParts.join(' > ');
+    }, null, 'XSD path detection');
+}
 
-    // Regular logic for smaller files
+function isXsdElement(tagName: string): boolean {
+    // Check if this is an XSD element that commonly has name attributes
+    const xsdElements = new Set([
+        'xs:element', 'xs:attribute', 'xs:type', 'xs:complexType', 'xs:simpleType',
+        'xs:group', 'xs:attributeGroup', 'element', 'attribute', 'type',
+        'complexType', 'simpleType', 'group', 'attributeGroup'
+    ]);
+    
+    return xsdElements.has(tagName);
+}
+
+function extractNameAttribute(tagContent: string): string | undefined {
+    // Performance optimized regex to extract name attribute
+    // Uses a more specific pattern to avoid backtracking issues
+    const nameMatch = tagContent.match(/\bname\s*=\s*["']([^"']+)["']/);
+    return nameMatch ? nameMatch[1] : undefined;
+}
+
+function countXsdSiblingsBeforePosition(xmlText: string, tagName: string, targetDepth: number, lineIndex: number, charIndex: number): number {
+    try {
+        const lines = xmlText.split('\n');
+        let siblingCount = 0;
+        let currentDepth = 0;
+        
+        // Parse from beginning up to the current position
+        for (let i = 0; i < lineIndex || (i === lineIndex && charIndex >= 0); i++) {
+            const line = lines[i];
+            if (!line) continue;
+            
+            const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9-_:]*)[^>]*>/g;
+            let match;
+            
+            const endIndex = i === lineIndex ? charIndex : line.length;
+            
+            while ((match = tagRegex.exec(line)) !== null) {
+                if (match.index >= endIndex) break;
+                
+                const fullTag = match[0];
+                const currentTagName = match[1];
+                
+                // Ensure currentTagName is defined
+                if (!currentTagName) continue;
+                
+                if (fullTag.startsWith('</')) {
+                    currentDepth--;
+                } else if (!fullTag.endsWith('/>')) {
+                    if (currentDepth === targetDepth && currentTagName === tagName) {
+                        siblingCount++;
+                    }
+                    currentDepth++;
+                }
+            }
+            
+            // Reset regex for next iteration
+            tagRegex.lastIndex = 0;
+        }
+        
+        return Math.max(0, siblingCount - 1);
+        
+    } catch (error) {
+        console.error('Error counting XSD siblings:', error);
+        return 0;
+    }
+}
+
+
+
+// Document Context
+function getDocumentContext(document: vscode.TextDocument, position: vscode.Position): string | null {
     const language = document.languageId;
     const filename = document.fileName.toLowerCase();
     
@@ -647,30 +853,25 @@ function getDocumentContext(document: vscode.TextDocument, position: vscode.Posi
         case 'html':
         case 'xhtml':
         case 'htm':
+            // Check if this is an XSD file specifically
+            if (filename.endsWith('.xsd')) {
+                return getXsdPath(document, position);
+            }
             return getXmlPath(document, position);
-        case 'csv':
-        case 'tsv':
-        case 'psv':
+        default:
+            // Check by file extension for files VS Code might not recognize
+            if (filename.endsWith('.xsd')) {
+                return getXsdPath(document, position);
+            }
+            if (filename.endsWith('.csv') || filename.endsWith('.tsv') || 
+                filename.endsWith('.psv') || filename.endsWith('.ssv') ||
+                filename.endsWith('.dsv') || filename.endsWith('.txt')) {
+                return null;
+            }
             return null;
     }
-    
-    if (filename.endsWith('.json') || filename.endsWith('.jsonc')) {
-        return getJsonPath(document, position);
-    }
-    
-    if (filename.endsWith('.xml') || filename.endsWith('.html') || 
-        filename.endsWith('.htm') || filename.endsWith('.xhtml')) {
-        return getXmlPath(document, position);
-    }
-    
-    if (filename.endsWith('.csv') || filename.endsWith('.tsv') || 
-        filename.endsWith('.psv') || filename.endsWith('.ssv') ||
-        filename.endsWith('.dsv')) {
-        return null;
-    }
-    
-    return null;
 }
+
 
 // Delimited file helper functions
 function detectDelimiter(text: string): string {
@@ -847,25 +1048,41 @@ function getDelimitedContextWithSelection(document: vscode.TextDocument, selecti
 }
 
 // Path enhancement with array indices
-function enhancePathWithArrayIndices(baseContext: string, document: vscode.TextDocument, position: vscode.Position, language: string): string {
-    if (!baseContext) return baseContext;
+function enhancePathWithArrayIndices(contextPath: string, document: vscode.TextDocument, position: vscode.Position, language: string): string {
+    const filename = document.fileName.toLowerCase();
+    
+    // Skip enhancement if this is an XSD file (already handled by getXsdPath)
+    if (filename.endsWith('.xsd')) {
+        return contextPath;
+    }
+    
+    // Continue with existing logic for other file types
+    const config = vscode.workspace.getConfiguration('copyWithContext');
+    const showArrayIndices = config.get<boolean>('showArrayIndices', true);
+    
+    if (!showArrayIndices) {
+        return contextPath;
+    }
     
     try {
+        const text = document.getText();
+        const pathParts = contextPath.split(/[\s>]+/).filter(part => part.trim());
+        
         switch (language) {
             case 'json':
             case 'jsonc':
-                return enhanceJsonPathWithIndices(document.getText(), position, baseContext.split('.'));
+                return enhanceJsonPathWithIndices(text, position, pathParts);
             case 'xml':
             case 'html':
             case 'xhtml':
             case 'htm':
-                return enhanceXmlPathWithIndices(document.getText(), position, baseContext.split(' > '));
+                return enhanceXmlPathWithIndices(text, position, pathParts);
             default:
-                return baseContext;
+                return contextPath;
         }
     } catch (error) {
-        console.error('Error enhancing path with indices:', error);
-        return baseContext;
+        console.error('Error enhancing path with array indices:', error);
+        return contextPath;
     }
 }
 
