@@ -35,7 +35,7 @@ function getFileSizeInfo(document: vscode.TextDocument): {lineCount: number, cha
     const charCount = document.getText().length;
     
     // Use user setting instead of hardcoded value
-    const config = vscode.workspace.getConfiguration('copyWithContext');
+    const config = vscode.workspace.getConfiguration('copyInfoWithContext');
     const lineThreshold = config.get('largeFileLineThreshold', 2000);
     const LARGE_FILE_CHAR_THRESHOLD = 5000000;  // 5MB    // Keep this hardcoded
     
@@ -83,13 +83,14 @@ async function safeExecuteCommand(fn: () => Promise<void>): Promise<void> {
         await fn();
     } catch (error) {
         console.error('Command execution error:', error);
-        vscode.window.showErrorMessage(`Copy with Context: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+        vscode.window.showErrorMessage(`Copy Info with Context: ${error instanceof Error ? 
+            error.message : 'Unknown error occurred'}`);
     }
 }
 
 // Configuration helpers
 function getConfig(): CopyConfig {
-    const config = vscode.workspace.getConfiguration('copyWithContext');
+    const config = vscode.workspace.getConfiguration('copyInfoWithContext');
     return {
         showLineNumbers: config.get('showLineNumbers', true),
         lineNumberPadding: config.get('lineNumberPadding', false),
@@ -102,7 +103,7 @@ function getConfig(): CopyConfig {
 }
 
 function getXmlIndexingMode(): 'local' | 'global' {
-    const config = vscode.workspace.getConfiguration('copyWithContext');
+    const config = vscode.workspace.getConfiguration('copyInfoWithContext');
     return config.get('xmlIndexingMode', 'local') as 'local' | 'global';
 }
 
@@ -760,68 +761,84 @@ function detectHeaders(text: string): boolean {
     }
 }
 
-function getColumnRange(document: vscode.TextDocument, selection: vscode.Selection): { startColumn: number; endColumn: number; columnNames: string[] } {
+function getColumnRangeFromSelection(
+    line: string, 
+    selection: vscode.Selection, 
+    delimiter: string, 
+    fields: string[]
+): { startColumn: number, endColumn: number } | null {
     try {
-        const text = document.getText();
-        const delimiter = detectDelimiter(text);
-        const lines = text.split('\n');
+        const selectionStart = selection.start.character;
+        const selectionEnd = selection.end.character;
         
-        if (lines.length === 0) {
-            return { startColumn: 0, endColumn: 0, columnNames: [] };
-        }
+        let charPosition = 0;
+        let startColumn = -1;
+        let endColumn = -1;
         
-        const firstLine = lines[0]!;
-        const headers = parseDelimitedLine(firstLine, delimiter);
-        const hasHeaders = detectHeaders(text);
-        
-        const currentLine = lines[selection.start.line];
-        if (!currentLine) {
-            return { startColumn: 0, endColumn: 0, columnNames: [] };
-        }
-        
-        const currentFields = parseDelimitedLine(currentLine, delimiter);
-        
-        const startChar = selection.start.character;
-        const endChar = selection.end.character;
-        
-        let selectedColumns: string[] = [];
-        let currentPos = 0;
-        let startColumn = 0;
-        let endColumn = 0;
-        let foundStart = false;
-        
-        for (let i = 0; i < currentFields.length; i++) {
-            const fieldLength = currentFields[i]!.length;
-            const fieldEnd = currentPos + fieldLength;
+        // Process each field with TypeScript safety
+        for (let i = 0; i < fields.length; i++) {
+            const field = fields[i];
             
-            if (!foundStart && currentPos <= startChar && startChar <= fieldEnd) {
+            // TypeScript safety: Handle undefined/null fields
+            if (field == null || field === undefined) {
+                // Skip undefined fields but advance position properly
+                if (i < fields.length - 1) {
+                    charPosition += delimiter.length;
+                }
+                continue;
+            }
+            
+            const fieldStart = charPosition;
+            const fieldEnd = charPosition + field.length; // Now field.length is safe
+            
+            // Check if selection starts within this field (not on preceding delimiter)
+            if (startColumn === -1 && selectionStart >= fieldStart && selectionStart < fieldEnd) {
                 startColumn = i;
-                foundStart = true;
             }
             
-            if (foundStart && currentPos <= endChar && endChar <= fieldEnd) {
+            // Check if selection ends within this field (not on following delimiter)  
+            if (selectionEnd > fieldStart && selectionEnd <= fieldEnd) {
                 endColumn = i;
-                break;
             }
             
-            if (currentPos <= startChar || (foundStart && currentPos <= endChar)) {
-                if (i < headers.length && hasHeaders) {
-                    selectedColumns.push(headers[i]!.replace(/^["']|["']$/g, ''));
-                } else {
-                    selectedColumns.push(`Column ${i + 1}`);
+            // SPECIAL CASE: If selection starts exactly on delimiter, start from next field
+            if (startColumn === -1 && i < fields.length - 1) {
+                const delimiterStart = fieldEnd;
+                const delimiterEnd = fieldEnd + delimiter.length;
+                if (selectionStart >= delimiterStart && selectionStart < delimiterEnd) {
+                    startColumn = i + 1;
                 }
             }
             
-            currentPos += fieldLength + 1;
+            // Early termination optimization
+            if (startColumn !== -1 && endColumn !== -1) {
+                break;
+            }
+            
+            // Advance character position properly
+            charPosition = fieldEnd;
+            if (i < fields.length - 1) {
+                charPosition += delimiter.length;
+            }
         }
         
-        return {
-            startColumn,
-            endColumn,
-            columnNames: selectedColumns.filter((col, index, arr) => arr.indexOf(col) === index)
-        };
+        // Handle edge cases
+        if (startColumn === -1 && endColumn !== -1) {
+            startColumn = 0;
+        }
+        if (startColumn !== -1 && endColumn === -1) {
+            endColumn = fields.length - 1;
+        }
+        
+        // Final validation
+        if (startColumn === -1 || endColumn === -1 || startColumn > endColumn) {
+            return null;
+        }
+        
+        return { startColumn, endColumn };
+        
     } catch (error) {
-        return { startColumn: 0, endColumn: 0, columnNames: [] };
+        return null;
     }
 }
 
@@ -830,19 +847,61 @@ function getDelimitedContextWithSelection(document: vscode.TextDocument, selecti
         const text = document.getText();
         const delimiter = detectDelimiter(text);
         const delimiterName = getDelimiterName(delimiter);
+        const lines = text.split('\n');
         
-        if (selection.isEmpty) {
-            return delimiterName;
-        }
+        if (lines.length === 0) return delimiterName;
         
-        const columnInfo = getColumnRange(document, selection);
+        // Get column information if possible
+        const firstLine = lines[0];
+        if (!firstLine) return delimiterName;
         
-        if (columnInfo.columnNames.length > 0) {
-            return `${delimiterName} > ${columnInfo.columnNames.join(', ')}`;
+        // Parse headers properly, considering quoted fields
+        const headers = parseDelimitedLine(firstLine, delimiter);
+        const currentLine = lines[selection.start.line];
+        
+        if (!currentLine) return delimiterName;
+        
+        // Parse the current line to find which columns are selected
+        const fields = parseDelimitedLine(currentLine, delimiter);
+        
+        // Check if first row looks like headers - use YOUR function signature (text: string)
+        const hasHeaders = detectHeaders(text);
+        
+        // Find which columns are covered by the selection
+        const columnRange = getColumnRangeFromSelection(currentLine, selection, delimiter, fields);
+        
+        if (columnRange) {
+            const { startColumn, endColumn } = columnRange;
+            
+            if (startColumn === endColumn) {
+                // Single column - TypeScript safe
+                let columnName: string;
+                const header = headers[startColumn];
+                if (hasHeaders && startColumn < headers.length && header != null && header !== undefined) {
+                    columnName = header.trim().replace(/^["']|["']$/g, '');
+                } else {
+                    columnName = `Column ${startColumn + 1}`;
+                }
+                return `${delimiterName} > ${columnName}`;
+            } else {
+                // Multiple columns - TypeScript safe
+                const columnNames: string[] = [];
+                
+                for (let i = startColumn; i <= endColumn; i++) {
+                    const header = headers[i];
+                    if (hasHeaders && i < headers.length && header != null && header !== undefined) {
+                        const headerName = header.trim().replace(/^["']|["']$/g, '');
+                        columnNames.push(headerName);
+                    } else {
+                        columnNames.push(`Column ${i + 1}`);
+                    }
+                }
+                
+                return `${delimiterName} > ${columnNames.join(', ')}`;
+            }
         }
         
         return delimiterName;
-        
     }, null, 'Delimited file context detection');
 }
 
@@ -1316,21 +1375,21 @@ async function handleCopyWithAnsiColors(): Promise<void> {
 
 // Extension activation
 export function activate(context: vscode.ExtensionContext): void {
-    console.log('Copy with Context extension is now active!');
+    console.log('Copy Info with Context extension is now active!');
 
-    const copyCommand = vscode.commands.registerCommand('copyWithContext.copySelection', async () => {
+    const copyCommand = vscode.commands.registerCommand('copyInfoWithContext.copySelection', async () => {
         if (vscode.window.activeTextEditor) {
             await safeExecuteCommand(handleCopyWithContext);
         }
     });
 
-    const copyHtmlCommand = vscode.commands.registerCommand('copyWithContext.copySelectionHTML', async () => {
+    const copyHtmlCommand = vscode.commands.registerCommand('copyInfoWithContext.copySelectionHTML', async () => {
         if (vscode.window.activeTextEditor) {
             await safeExecuteCommand(handleCopyWithHtmlHighlighting);
         }
     });
 
-    const copyCustomCommand = vscode.commands.registerCommand('copyWithContext.copySelectionCustom', async () => {
+    const copyCustomCommand = vscode.commands.registerCommand('copyInfoWithContext.copySelectionCustom', async () => {
         if (vscode.window.activeTextEditor) {
             await safeExecuteCommand(handleCopyWithCustomFormat);
         }

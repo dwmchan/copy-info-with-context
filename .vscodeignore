@@ -35,5 +35,5 @@ examples/**
 scripts/**
 *.md
 !README.md
-LICENSE
 .github/**
+!LICENSE.md

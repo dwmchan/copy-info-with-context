@@ -1,4 +1,4 @@
-# Copy with Context - VS Code Extension
+# Copy Info with Context - VS Code Extension
 
 > Born from the frustration of constantly copying and pasting code snippets, data, and configuration fragments without any context about where they came from or what they represented.
 
@@ -54,10 +54,10 @@ This extension was created to solve exactly these problems - providing rich cont
 
 1. Open VS Code
 2. Press `Ctrl+P` to open Quick Open
-3. Type `ext install copy-with-context`
+3. Type `ext install copy-info-with-context`
 4. Press Enter and reload VS Code
 
-Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=donald-chan.copy-with-context).
+Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=donald-chan.copy-info-with-context).
 
 ## Usage Examples
 
@@ -113,21 +113,21 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `copyWithContext.showLineNumbers` | `true` | Show line numbers on each copied line |
-| `copyWithContext.lineNumberPadding` | `false` | Add padding for consistent line number alignment |
-| `copyWithContext.showContextPath` | `true` | Show contextual path information |
-| `copyWithContext.enableColorCoding` | `false` | Enable syntax highlighting in default copy |
-| `copyWithContext.colorTheme` | `"dark"` | Color theme for syntax highlighting |
-| `copyWithContext.showArrayIndices` | `true` | Show array indices in context paths |
-| `copyWithContext.maxFileSize` | `5000000` | Maximum file size to process (bytes) |
+| `copyInfoWithContext.showLineNumbers` | `true` | Show line numbers on each copied line |
+| `copyInfoWithContext.lineNumberPadding` | `false` | Add padding for consistent line number alignment |
+| `copyInfoWithContext.showContextPath` | `true` | Show contextual path information |
+| `copyInfoWithContext.enableColorCoding` | `false` | Enable syntax highlighting in default copy |
+| `copyInfoWithContext.colorTheme` | `"dark"` | Color theme for syntax highlighting |
+| `copyInfoWithContext.showArrayIndices` | `true` | Show array indices in context paths |
+| `copyInfoWithContext.maxFileSize` | `5000000` | Maximum file size to process (bytes) |
 
 ### Example Configuration
 ```json
 {
-  "copyWithContext.showLineNumbers": true,
-  "copyWithContext.showContextPath": true,
-  "copyWithContext.enableColorCoding": false,
-  "copyWithContext.maxFileSize": 10000000
+  "copyInfoWithContext.showLineNumbers": true,
+  "copyInfoWithContext.showContextPath": true,
+  "copyInfoWithContext.enableColorCoding": false,
+  "copyInfoWithContext.maxFileSize": 10000000
 }
 ```
 
@@ -158,7 +158,7 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 ### Custom Format Selection
 1. Select code or place cursor
 2. Open Command Palette (`Ctrl+Shift+P`)
-3. Type "Copy with Context Custom"
+3. Type "Copy Info with Context Custom"
 4. Choose from multiple formats:
    - Comment Style
    - Markdown Style  
@@ -183,8 +183,8 @@ Automatically detects and handles:
 
 ### Building from Source
 ```bash
-git clone https://github.com/dwmchan/copy-with-context.git
-cd copy-with-context
+git clone https://github.com/dwmchan/copy-info-with-context.git
+cd copy-info-with-context
 npm install
 npm run compile
 ```
@@ -237,7 +237,7 @@ npm run test:watch
 - **Wikis**: Context-aware code snippets
 - **Blog posts**: Professional syntax highlighting
 
-### 🐛 Debugging & Support
+### 🛠 Debugging & Support
 - **Stack Overflow**: Clear context and formatting
 - **Support tickets**: Exact file and line references
 - **Code sharing**: Always know where code came from
@@ -280,7 +280,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have feature requests, please:
 
-1. Check the [Issues](https://github.com/dwmchan/copy-with-context/issues) page
+1. Check the [Issues](https://github.com/dwmchan/copy-info-with-context/issues) page
 2. Create a new issue with detailed information
 3. Include your VS Code version, extension version, and file type
 

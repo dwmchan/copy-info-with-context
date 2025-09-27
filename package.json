@@ -1,9 +1,9 @@
 {
-  "name": "copy-with-context",
-  "displayName": "Copy with Context",
+  "name": "copy-info-with-context",
+  "displayName": "Copy Info with Context",
   "description": "Copy code snippets with intelligent contextual information - filename, line numbers, and smart path detection for structured data. Perfect for documentation, code reviews, debugging, and sharing code with proper attribution.",
   "version": "1.0.0",
-  "publisher": "Donald Chan",
+  "publisher": "DonaldChan",
   "author": {
     "name": "Donald Chan",
     "email": "donald@iendeavour.com.au"
@@ -11,11 +11,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dwmchan/copy-with-context.git"
+    "url": "https://github.com/dwmchan/copy-info-with-context.git"
   },
-  "homepage": "https://github.com/dwmchan/copy-with-context#readme",
+  "homepage": "https://github.com/dwmchan/copy-info-with-context#readme",
   "bugs": {
-    "url": "https://github.com/dwmchan/copy-with-context/issues"
+    "url": "https://github.com/dwmchan/copy-info-with-context/issues"
   },
   "keywords": [
     "copy",
@@ -62,63 +62,63 @@
   "contributes": {
     "commands": [
       {
-        "command": "copyWithContext.copySelection",
-        "title": "Copy with Context",
-        "category": "Copy with Context"
+        "command": "copyInfoWithContext.copySelection",
+        "title": "Copy Info with Context",
+        "category": "Copy Info with Context"
       },
       {
-        "command": "copyWithContext.copySelectionCustom",
-        "title": "Copy with Context (Custom Format)",
-        "category": "Copy with Context"
+        "command": "copyInfoWithContext.copySelectionCustom",
+        "title": "Copy Info with Context (Custom Format)",
+        "category": "Copy Info with Context"
       },
       {
-        "command": "copyWithContext.copySelectionHTML",
-        "title": "Copy with Context (Colored HTML)",
-        "category": "Copy with Context"
+        "command": "copyInfoWithContext.copySelectionHTML",
+        "title": "Copy Info with Context (Colored HTML)",
+        "category": "Copy Info with Context"
       }
     ],
     "configuration": {
-      "title": "Copy with Context",
+      "title": "Copy Info with Context",
       "properties": {
-        "copyWithContext.showLineNumbers": {
+        "copyInfoWithContext.showLineNumbers": {
           "type": "boolean",
           "default": true,
           "description": "Show line numbers on each line of copied code"
         },
-        "copyWithContext.lineNumberPadding": {
+        "copyInfoWithContext.lineNumberPadding": {
           "type": "boolean",
           "default": false,
           "description": "Add padding to line numbers for consistent alignment"
         },
-        "copyWithContext.showContextPath": {
+        "copyInfoWithContext.showContextPath": {
           "type": "boolean",
           "default": true,
           "description": "Show contextual path information (JSON paths, XML paths, function/class names)"
         },
-        "copyWithContext.enableColorCoding": {
+        "copyInfoWithContext.enableColorCoding": {
           "type": "boolean",
           "default": false,
           "description": "Enable syntax highlighting/color coding in copied text (HTML format)"
         },
-        "copyWithContext.colorTheme": {
+        "copyInfoWithContext.colorTheme": {
           "type": "string",
           "enum": ["dark", "light"],
           "default": "dark",
           "description": "Color theme for syntax highlighting (dark or light)"
         },
-        "copyWithContext.showArrayIndices": {
+        "copyInfoWithContext.showArrayIndices": {
           "type": "boolean",
           "default": true,
           "description": "Show array indices in context paths (e.g., users[0], items[1])"
         },
-        "copyWithContext.maxFileSize": {
+        "copyInfoWithContext.maxFileSize": {
           "type": "number",
           "default": 5000000,
           "minimum": 100000,
           "maximum": 50000000,
           "description": "Maximum file size to process (bytes). Files larger than this will show a warning."
         },
-        "copyWithContext.xmlIndexingMode": {
+        "copyInfoWithContext.xmlIndexingMode": {
           "type": "string",
           "enum": ["local", "global"],
           "enumDescriptions": [
@@ -128,31 +128,31 @@
           "default": "local",
           "description": "XML element indexing mode: 'local' counts within parent container, 'global' counts across entire document"
         },
-        "copyWithContext.largeFileLineThreshold": {
+        "copyInfoWithContext.largeFileLineThreshold": {
           "type": "number",
           "default": 20000,
           "minimum": 5000,
           "maximum": 50000,
           "description": "Line count threshold for performance mode (skips complex indexing for large files)"
         },
-          "copyWithContext.largeFileCharThreshold": {
-            "type": "number",
-            "default": 100000,
-            "minimum": 10000,
-            "maximum": 1000000,
-            "description": "Character count threshold for performance mode"
+        "copyInfoWithContext.largeFileCharThreshold": {
+          "type": "number",
+          "default": 100000,
+          "minimum": 10000,
+          "maximum": 1000000,
+          "description": "Character count threshold for performance mode"
         }
       }
     },
     "keybindings": [
       {
-        "command": "copyWithContext.copySelection",
+        "command": "copyInfoWithContext.copySelection",
         "key": "ctrl+alt+c",
         "mac": "cmd+alt+c",
         "when": "editorTextFocus"
       },
       {
-        "command": "copyWithContext.copySelectionHTML",
+        "command": "copyInfoWithContext.copySelectionHTML",
         "key": "ctrl+alt+h",
         "mac": "cmd+alt+h", 
         "when": "editorTextFocus"
@@ -161,17 +161,17 @@
     "menus": {
       "editor/context": [
         {
-          "command": "copyWithContext.copySelection",
+          "command": "copyInfoWithContext.copySelection",
           "when": "editorHasSelection",
           "group": "9_cutcopypaste@2"
         },
         {
-          "command": "copyWithContext.copySelectionHTML",
+          "command": "copyInfoWithContext.copySelectionHTML",
           "when": "editorHasSelection", 
           "group": "9_cutcopypaste@3"
         },
         {
-          "command": "copyWithContext.copySelectionCustom",
+          "command": "copyInfoWithContext.copySelectionCustom",
           "when": "editorHasSelection",
           "group": "9_cutcopypaste@4"
         }
