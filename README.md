@@ -37,6 +37,7 @@ This extension was created to solve exactly these problems - providing rich cont
 - **Delimited Files**: Auto-detects CSV, TSV, PSV, SSV with proper formatting
 
 ### ⚡ Performance & Reliability
+- **Smart Dedenting**: Automatically removes excessive indentation while preserving code structure
 - **Fixed Indexing Issues**: Accurate array/sibling counting for JSON and XML
 - **Intelligent File Detection**: JSON files no longer misidentified as CSV
 - **Consistent Line Numbering**: Reliable line numbers across all formats
@@ -131,7 +132,31 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 }
 ```
 
-## Key Fixes in Latest Version
+## Key Features in Latest Version
+
+### ✨ Smart Dedenting Algorithm
+- **What it does**: Automatically removes excessive common indentation while preserving code structure
+- **How it works**: Calculates minimum indentation across all lines and strips it from deeply nested code (>2 spaces)
+- **Result**: Clean, readable code blocks without excessive leading whitespace but with hierarchy intact
+- **Example**: Deeply nested XML at 8 spaces becomes left-aligned while maintaining parent-child relationships
+
+**Before dedenting:**
+```xml
+        <Parties>
+            <Party>
+                <Name>John</Name>
+            </Party>
+        </Parties>
+```
+
+**After dedenting:**
+```
+1: <Parties>
+2:     <Party>
+3:         <Name>John</Name>
+4:     </Party>
+5: </Parties>
+```
 
 ### 🐛 Fixed XML Indexing Issue
 - **Problem**: XML sibling elements were being counted globally instead of within their parent container
@@ -265,6 +290,12 @@ Contributions are welcome! Please feel free to submit issues and enhancement req
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v1.1.0
+- ✨ Added smart dedenting algorithm that preserves code structure while removing excessive indentation
+- ✅ Maintains relative hierarchy in deeply nested XML/JSON/code
+- ✅ Backward compatible - code with ≤2 spaces unchanged
+- ✅ Efficient single-pass implementation with O(n) complexity
 
 ### v1.0.0
 - ✅ Fixed XML sibling indexing issue (Relation[5] → Relation[2])
