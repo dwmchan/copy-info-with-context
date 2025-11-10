@@ -21,7 +21,9 @@ This extension was created to solve exactly these problems - providing rich cont
 - **JSON/JSONC**: Full property paths with accurate array indices (e.g., `users[2].contacts[1]`)
 - **XML/HTML**: Element hierarchy with precise sibling indexing (e.g., `Relations > Relation[2] > Type`)
 - **CSV/TSV/PSV**: Intelligent column detection with proper delimiter handling
-- **Programming Languages**: Function and class context for JavaScript, TypeScript, Python, C#, and more
+- **Programming Languages**: Function and class context for JavaScript, TypeScript, Python, C#, PowerShell, and more
+  - Detects function names, class names, and namespaces
+  - Shows full context path (e.g., `MyNamespace > MyClass > MyMethod`)
 - **CSS/SCSS/SASS/LESS**: Selector context and media query detection
 
 ### 📝 Multiple Output Formats
@@ -133,6 +135,34 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 ```
 
 ## Key Features in Latest Version
+
+### ✨ NEW in v1.2.0: Function/Class Context Detection
+- **What it does**: Automatically detects and displays the function, class, or method name in the copy header
+- **Supported languages**: JavaScript, TypeScript, C#, Python, PowerShell
+- **How it works**: Searches backwards from your selection to find the containing function/class
+- **Result**: Know exactly where your code came from at a glance
+
+**Example:**
+When copying code inside a function:
+```typescript
+// extension.ts:684-691 (detectDelimiter)
+684: for (const delimiter of delimiters) {
+685:     const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+686:     if (count > maxCount) {
+687:         maxCount = count;
+688:         bestDelimiter = delimiter;
+689:     }
+690: }
+```
+
+When copying code inside a class method:
+```csharp
+// UserService.cs:45-50 (MyApp.Services > UserService > ProcessData)
+45: var users = await _repository.GetUsers();
+46: foreach (var user in users) {
+47:     ProcessUser(user);
+48: }
+```
 
 ### ✨ Smart Dedenting Algorithm
 - **What it does**: Automatically removes excessive common indentation while preserving code structure
@@ -290,6 +320,15 @@ Contributions are welcome! Please feel free to submit issues and enhancement req
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v1.2.0
+- ✨ Added function/class/method context detection for programming languages
+- ✅ JavaScript/TypeScript: Detects functions, arrow functions, classes, and methods
+- ✅ C#: Detects methods, classes, and namespaces with full path (e.g., `MyApp.Services > UserService > ProcessData`)
+- ✅ Python: Detects functions and class methods
+- ✅ PowerShell: Detects functions (including Verb-Noun cmdlets), advanced functions, and classes
+- ✅ Context appears in copy header (e.g., `// extension.ts:684-691 (detectDelimiter)`)
+- ✅ Works with all copy formats (plain text, HTML, Markdown, ANSI)
 
 ### v1.1.0
 - ✨ Added smart dedenting algorithm that preserves code structure while removing excessive indentation
