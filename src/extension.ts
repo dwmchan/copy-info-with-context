@@ -10,6 +10,11 @@ interface CopyConfig {
     colorTheme: string;
     showArrayIndices: boolean;
     maxFileSize: number;
+    csvOutputMode: 'minimal' | 'smart' | 'table' | 'detailed';
+    csvTableShowTypes: boolean;
+    csvTableMaxRows: number;
+    csvTableMaxColumns: number;
+    csvTableAlignNumbers: 'left' | 'right';
 }
 
 // Module-level caches
@@ -98,7 +103,12 @@ function getConfig(): CopyConfig {
         enableColorCoding: config.get('enableColorCoding', false),
         colorTheme: config.get('colorTheme', 'dark'),
         showArrayIndices: config.get('showArrayIndices', true),
-        maxFileSize: config.get('maxFileSize', 5000000)
+        maxFileSize: config.get('maxFileSize', 5000000),
+        csvOutputMode: config.get('csvOutputMode', 'minimal'),
+        csvTableShowTypes: config.get('csvTableShowTypes', true),
+        csvTableMaxRows: config.get('csvTableMaxRows', 20),
+        csvTableMaxColumns: config.get('csvTableMaxColumns', 10),
+        csvTableAlignNumbers: config.get('csvTableAlignNumbers', 'right')
     };
 }
 
@@ -890,23 +900,23 @@ function detectHeaders(text: string): boolean {
 }
 
 function getColumnRangeFromSelection(
-    line: string, 
-    selection: vscode.Selection, 
-    delimiter: string, 
+    line: string,
+    selection: vscode.Selection,
+    delimiter: string,
     fields: string[]
 ): { startColumn: number, endColumn: number } | null {
     try {
         const selectionStart = selection.start.character;
         const selectionEnd = selection.end.character;
-        
+
         let charPosition = 0;
         let startColumn = -1;
         let endColumn = -1;
-        
+
         // Process each field with TypeScript safety
         for (let i = 0; i < fields.length; i++) {
             const field = fields[i];
-            
+
             // TypeScript safety: Handle undefined/null fields
             if (field == null || field === undefined) {
                 // Skip undefined fields but advance position properly
@@ -915,20 +925,27 @@ function getColumnRangeFromSelection(
                 }
                 continue;
             }
-            
+
             const fieldStart = charPosition;
             const fieldEnd = charPosition + field.length; // Now field.length is safe
-            
-            // Check if selection starts within this field (not on preceding delimiter)
-            if (startColumn === -1 && selectionStart >= fieldStart && selectionStart < fieldEnd) {
-                startColumn = i;
+
+            // MODIFIED: Only include complete fields - skip partial field at start
+            if (startColumn === -1) {
+                // Check if selection starts mid-field (after field start but before field end)
+                if (selectionStart > fieldStart && selectionStart < fieldEnd) {
+                    // Skip this partial field - move to next complete field
+                    // Don't set startColumn yet - wait for next field
+                } else if (selectionStart <= fieldStart) {
+                    // Selection starts at or before this field - include it
+                    startColumn = i;
+                }
             }
-            
-            // Check if selection ends within this field (not on following delimiter)  
+
+            // Check if selection ends within or after this field
             if (selectionEnd > fieldStart && selectionEnd <= fieldEnd) {
                 endColumn = i;
             }
-            
+
             // SPECIAL CASE: If selection starts exactly on delimiter, start from next field
             if (startColumn === -1 && i < fields.length - 1) {
                 const delimiterStart = fieldEnd;
@@ -937,12 +954,12 @@ function getColumnRangeFromSelection(
                     startColumn = i + 1;
                 }
             }
-            
+
             // Early termination optimization
             if (startColumn !== -1 && endColumn !== -1) {
                 break;
             }
-            
+
             // Advance character position properly
             charPosition = fieldEnd;
             if (i < fields.length - 1) {
@@ -1206,23 +1223,302 @@ async function handleCopyWithContext(): Promise<void> {
     
     const config = getConfig();
     const sizeInfo = getFileSizeInfo(document); // ADD THIS LINE
-    
+
+    // Check if this is a CSV file and TABLE mode is enabled
+    const filename = document.fileName.toLowerCase();
+    const language = document.languageId;
+    const isCSVFile = (
+        language === 'csv' || language === 'tsv' || language === 'psv' ||
+        filename.endsWith('.csv') || filename.endsWith('.tsv') ||
+        filename.endsWith('.psv') || filename.endsWith('.ssv') ||
+        filename.endsWith('.dsv')
+    );
+
+    // If TABLE, SMART, or DETAILED mode and CSV file, use enhanced format
+    if ((config.csvOutputMode === 'table' || config.csvOutputMode === 'smart' || config.csvOutputMode === 'detailed') && isCSVFile && !selection.isEmpty) {
+        const delimiter = detectDelimiter(document.getText());
+        const lines = selectedText.split('\n').filter(line => line.trim().length > 0);
+
+        if (lines.length > 0) {
+            // Detect if selection starts mid-field by checking if first character is a delimiter
+            let adjustedLines = lines;
+            let columnOffset = 0; // Track which column index we start from
+
+            // If selection starts after line 1, check if we need to trim partial columns
+            if (startLine > 1) {
+                // Check if the first line starts with a partial field (doesn't start with delimiter or quote)
+                const firstLine = lines[0]!;
+                const firstChar = firstLine.charAt(0);
+
+                // If first character is not a delimiter and not a quote, we likely have a partial field
+                if (firstChar !== delimiter && firstChar !== '"' && firstChar !== "'") {
+                    // Find the first delimiter to skip the partial field
+                    const firstDelimiterIndex = firstLine.indexOf(delimiter);
+                    if (firstDelimiterIndex > 0) {
+                        // Adjust all lines to start from the first complete field
+                        adjustedLines = lines.map(line => {
+                            const delimiterIndex = line.indexOf(delimiter);
+                            return delimiterIndex > 0 ? line.substring(delimiterIndex + 1) : line;
+                        });
+
+                        // Calculate column offset by counting delimiters before selection in the full line
+                        try {
+                            const fullLine = document.lineAt(startLine - 1).text; // Get full data row
+                            const selectionStart = selection.start.character;
+                            const beforeSelection = fullLine.substring(0, selectionStart);
+                            // Count complete fields before selection (delimiters + 1)
+                            columnOffset = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length + 1;
+                        } catch {
+                            columnOffset = 0;
+                        }
+                    }
+                }
+            }
+
+            // Parse rows
+            const rows = adjustedLines.map(line => {
+                // Simple CSV parsing (handles basic cases)
+                return line.split(delimiter).map(cell => cell.trim().replace(/^["']|["']$/g, ''));
+            });
+
+            // Try to get header from line 1 if available
+            let headers: string[];
+            let dataRows = rows;
+
+            // Check if first line of file looks like headers (not in selection)
+            if (startLine > 1) {
+                // Selection starts after line 1, try to get actual headers from line 1
+                try {
+                    const headerLine = document.lineAt(0).text;
+                    if (headerLine.includes(delimiter)) {
+                        const allHeaders = headerLine.split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ''));
+                        const selectedColumnCount = rows[0]?.length || 0;
+
+                        // Take headers starting from columnOffset
+                        if (allHeaders.length >= columnOffset + selectedColumnCount) {
+                            headers = allHeaders.slice(columnOffset, columnOffset + selectedColumnCount);
+                        } else {
+                            // Fallback to generic names if something is wrong
+                            headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                        }
+                    } else {
+                        headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                    }
+                } catch {
+                    headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                }
+            } else if (startLine === 1) {
+                // Selection includes line 1 - use first row as header, rest as data
+                headers = rows[0]!;
+                dataRows = rows.slice(1);
+            } else {
+                headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+            }
+
+            if (dataRows.length === 0) {
+                dataRows = rows; // Fallback if no data rows
+            }
+
+            if (config.csvOutputMode === 'table') {
+                // Build table
+                const table = buildAsciiTable(dataRows, headers, config);
+
+                const lineRange = startLine === endLine ? `${startLine}` : `${startLine}-${endLine}`;
+                const header = `// ${displayName}:${lineRange}`;
+                const summary = ` | ${dataRows.length} record${dataRows.length !== 1 ? 's' : ''}`;
+
+                const output = `${header}${summary}\n\n${table}\n\n// Summary: ${dataRows.length} row${dataRows.length !== 1 ? 's' : ''} × ${headers.length} column${headers.length !== 1 ? 's' : ''}`;
+
+                await vscode.env.clipboard.writeText(output);
+                vscode.window.showInformationMessage('CSV data copied as table!');
+                return;
+            } else if (config.csvOutputMode === 'smart') {
+                // SMART mode - compact with types
+                const lineRange = startLine === endLine ? `${startLine}` : `${startLine}-${endLine}`;
+                const header = `// ${displayName}:${lineRange}`;
+
+                // Format data rows with line numbers
+                const formattedRows = dataRows.map((row, idx) => {
+                    const lineNum = startLine + (startLine === 1 ? idx + 1 : idx);
+                    const rowData = row.join(', ');
+                    return `${lineNum}: ${rowData}`;
+                }).join('\n');
+
+                // Detect column types
+                const types = headers.map((h, i) => {
+                    const colValues = dataRows.map(r => r[i] || '');
+                    const numCount = colValues.filter(v => !isNaN(Number(v)) && v.trim() !== '').length;
+                    const boolCount = colValues.filter(v => ['true', 'false', 'yes', 'no', '1', '0'].includes(v.toLowerCase())).length;
+
+                    if (boolCount > colValues.length * 0.7) return 'Boolean';
+                    if (numCount > colValues.length * 0.7) {
+                        const hasDecimals = colValues.some(v => v.includes('.'));
+                        return hasDecimals ? 'Float' : 'Integer';
+                    }
+                    return 'String';
+                });
+
+                const output = `${header}\n// Columns: ${headers.join(', ')}\n// Types: ${types.join(', ')}\n\n${formattedRows}`;
+
+                await vscode.env.clipboard.writeText(output);
+                vscode.window.showInformationMessage('CSV data copied in SMART mode!');
+                return;
+            } else if (config.csvOutputMode === 'detailed') {
+                // DETAILED mode - Full intelligence with analytics and insights
+                const lineRange = startLine === endLine ? `${startLine}` : `${startLine}-${endLine}`;
+                const header = `// ${displayName}:${lineRange}`;
+
+                // Format data rows with line numbers
+                const formattedRows = dataRows.map((row, idx) => {
+                    const lineNum = startLine + (startLine === 1 ? idx + 1 : idx);
+                    const rowData = row.join(', ');
+                    return `${lineNum}: ${rowData}`;
+                }).join('\n');
+
+                // Detect column types
+                const types = headers.map((h, i) => {
+                    const colValues = dataRows.map(r => r[i] || '');
+                    const numCount = colValues.filter(v => !isNaN(Number(v)) && v.trim() !== '').length;
+                    const boolCount = colValues.filter(v => ['true', 'false', 'yes', 'no', '1', '0'].includes(v.toLowerCase())).length;
+
+                    if (boolCount > colValues.length * 0.7) return 'Boolean';
+                    if (numCount > colValues.length * 0.7) {
+                        const hasDecimals = colValues.some(v => v.includes('.'));
+                        return hasDecimals ? 'Float' : 'Integer';
+                    }
+                    return 'String';
+                });
+
+                // Calculate statistics for numeric columns
+                const statistics: string[] = [];
+                headers.forEach((h, i) => {
+                    const colValues = dataRows.map(r => r[i] || '');
+                    const numericValues = colValues.filter(v => !isNaN(Number(v)) && v.trim() !== '').map(v => Number(v));
+
+                    if (numericValues.length > colValues.length * 0.7) {
+                        const min = Math.min(...numericValues);
+                        const max = Math.max(...numericValues);
+                        const sum = numericValues.reduce((a, b) => a + b, 0);
+                        const avg = sum / numericValues.length;
+                        statistics.push(`  ${h}: min=${min.toFixed(2)}, max=${max.toFixed(2)}, avg=${avg.toFixed(2)}`);
+                    }
+                });
+
+                // Detect patterns and insights
+                const insights: string[] = [];
+
+                // Check for ID columns
+                const idColumns = headers.filter(h =>
+                    h.toLowerCase().includes('id') ||
+                    h.toLowerCase().includes('key') ||
+                    h.toLowerCase().includes('number')
+                );
+                if (idColumns.length > 0) {
+                    insights.push(`Identifier columns: ${idColumns.join(', ')}`);
+                }
+
+                // Check for status/category columns
+                const categoryColumns = headers.filter((h, i) => {
+                    const colValues = dataRows.map(r => r[i] || '');
+                    const uniqueValues = new Set(colValues);
+                    return uniqueValues.size < colValues.length * 0.5 && uniqueValues.size > 1;
+                });
+                if (categoryColumns.length > 0) {
+                    insights.push(`Category columns: ${categoryColumns.join(', ')}`);
+                }
+
+                // Check for date columns
+                const dateColumns = headers.filter(h =>
+                    h.toLowerCase().includes('date') ||
+                    h.toLowerCase().includes('time') ||
+                    h.toLowerCase().includes('timestamp')
+                );
+                if (dateColumns.length > 0) {
+                    insights.push(`Date/Time columns: ${dateColumns.join(', ')}`);
+                }
+
+                // Build detailed output
+                const parts: string[] = [
+                    header,
+                    '// Columns: ' + headers.join(', '),
+                    '// Types: ' + types.join(', '),
+                    ''
+                ];
+
+                if (statistics.length > 0) {
+                    parts.push('// Statistics:');
+                    parts.push(...statistics);
+                    parts.push('');
+                }
+
+                if (insights.length > 0) {
+                    parts.push('// Insights:');
+                    insights.forEach(insight => parts.push(`//   ${insight}`));
+                    parts.push('');
+                }
+
+                parts.push('// Data:');
+                parts.push(formattedRows);
+                parts.push('');
+                parts.push(`// Summary: ${dataRows.length} row${dataRows.length !== 1 ? 's' : ''} × ${headers.length} column${headers.length !== 1 ? 's' : ''}`);
+
+                const output = parts.join('\n');
+
+                await vscode.env.clipboard.writeText(output);
+                vscode.window.showInformationMessage('CSV data copied in DETAILED mode!');
+                return;
+            }
+        }
+    }
+
+    // MINIMAL mode: Trim partial fields for CSV files
+    if (config.csvOutputMode === 'minimal' && !selection.isEmpty) {
+        const isCSVFile = (
+            language === 'csv' || language === 'tsv' || language === 'psv' ||
+            filename.endsWith('.csv') || filename.endsWith('.tsv') ||
+            filename.endsWith('.psv') || filename.endsWith('.ssv') ||
+            filename.endsWith('.dsv')
+        );
+
+        if (isCSVFile) {
+            const delimiter = detectDelimiter(document.getText());
+            const lines = selectedText.split('\n');
+
+            if (lines.length > 0) {
+                const firstLine = lines[0]!;
+                const firstChar = firstLine.charAt(0);
+
+                // If first character is not a delimiter and not a quote, we likely have a partial field
+                if (firstChar !== delimiter && firstChar !== '"' && firstChar !== "'") {
+                    // Find the first delimiter to skip the partial field
+                    const firstDelimiterIndex = firstLine.indexOf(delimiter);
+                    if (firstDelimiterIndex > 0) {
+                        // Trim all lines to start from the first complete field
+                        const trimmedLines = lines.map(line => {
+                            const delimiterIndex = line.indexOf(delimiter);
+                            return delimiterIndex > 0 ? line.substring(delimiterIndex + 1) : line;
+                        });
+                        selectedText = trimmedLines.join('\n');
+                    }
+                }
+            }
+        }
+    }
+
     let contextInfo = '';
     if (config.showContextPath) {
         let context = getDocumentContext(document, selection.start);
-        
+
         // Only try delimited detection if not in performance mode
         if (!context && !selection.isEmpty && !sizeInfo.isLarge) { // ADD SIZE CHECK
-            const filename = document.fileName.toLowerCase();
-            const language = document.languageId;
-            
+
             const isExplicitlyDelimited = (
                 language === 'csv' || language === 'tsv' || language === 'psv' ||
-                filename.endsWith('.csv') || filename.endsWith('.tsv') || 
+                filename.endsWith('.csv') || filename.endsWith('.tsv') ||
                 filename.endsWith('.psv') || filename.endsWith('.ssv') ||
                 filename.endsWith('.dsv')
             );
-            
+
             if (isExplicitlyDelimited) {
                 context = getDelimitedContextWithSelection(document, selection);
             }
@@ -1518,6 +1814,166 @@ async function handleCopyWithAnsiColors(): Promise<void> {
     vscode.window.showInformationMessage('Code copied with ANSI colors!');
 }
 
+// ============================================================================
+// CSV INTELLIGENCE - TABLE MODE IMPLEMENTATION
+// ============================================================================
+
+/**
+ * Build ASCII table with Unicode box-drawing characters
+ */
+function buildAsciiTable(
+    rows: string[][],
+    headers: string[],
+    config: CopyConfig
+): string {
+    if (rows.length === 0 || headers.length === 0) {
+        return '';
+    }
+
+    // Handle column truncation
+    const maxColumns = config.csvTableMaxColumns;
+    let displayHeaders = headers;
+    let displayRows = rows;
+
+    if (headers.length > maxColumns) {
+        const truncatedColumns = headers.length - (maxColumns - 1);
+        displayHeaders = [...headers.slice(0, maxColumns - 1), `(${truncatedColumns} more)`];
+        displayRows = rows.map(row => [...row.slice(0, maxColumns - 1), '...']);
+    }
+
+    // Handle row truncation
+    const maxRows = config.csvTableMaxRows;
+    let truncatedRows = 0;
+
+    if (displayRows.length > maxRows) {
+        truncatedRows = displayRows.length - maxRows;
+        displayRows = displayRows.slice(0, maxRows);
+    }
+
+    // Calculate column widths
+    const widths = displayHeaders.map((header, i) => {
+        const maxDataWidth = Math.max(
+            ...displayRows.map(row => (row[i] || '').length)
+        );
+        return Math.max(header.length, maxDataWidth, 5);
+    });
+
+    // Detect column alignments
+    const alignments = detectColumnAlignments(displayRows, config);
+
+    // Build table parts
+    const topBorder = '┌' + widths.map(w => '─'.repeat(w + 2)).join('┬') + '┐';
+    const headerRow = '│' + displayHeaders.map((h, i) => ` ${h.padEnd(widths[i]!)} `).join('│') + '│';
+    const headerDivider = '├' + widths.map(w => '─'.repeat(w + 2)).join('┼') + '┤';
+
+    const dataRows = displayRows.map(row => {
+        const cells = row.map((value, i) => {
+            const width = widths[i]!;
+            const alignment = alignments[i] || 'left';
+            let paddedValue: string;
+
+            if (alignment === 'right') {
+                paddedValue = value.padStart(width);
+            } else if (alignment === 'center') {
+                const totalPadding = width - value.length;
+                const leftPadding = Math.floor(totalPadding / 2);
+                const rightPadding = totalPadding - leftPadding;
+                paddedValue = ' '.repeat(leftPadding) + value + ' '.repeat(rightPadding);
+            } else {
+                paddedValue = value.padEnd(width);
+            }
+
+            return ` ${paddedValue} `;
+        });
+        return '│' + cells.join('│') + '│';
+    });
+
+    const bottomBorder = '└' + widths.map(w => '─'.repeat(w + 2)).join('┴') + '┘';
+
+    const table = [topBorder, headerRow, headerDivider, ...dataRows, bottomBorder];
+
+    // Add truncation notice if needed
+    if (truncatedRows > 0) {
+        table.push(`... ${truncatedRows} more row${truncatedRows !== 1 ? 's' : ''} (increase maxRows to see all)`);
+    }
+
+    return table.join('\n');
+}
+
+/**
+ * Detect column alignments based on content
+ */
+function detectColumnAlignments(
+    data: string[][],
+    config: CopyConfig
+): Array<'left' | 'right' | 'center'> {
+    const columnCount = data[0]?.length || 0;
+    const alignments: Array<'left' | 'right' | 'center'> = [];
+
+    for (let i = 0; i < columnCount; i++) {
+        const columnValues = data.map(row => row[i] || '');
+
+        // Check if mostly numeric
+        const numericCount = columnValues.filter(v =>
+            !isNaN(Number(v)) && v.trim() !== ''
+        ).length;
+        const isNumeric = numericCount > columnValues.length * 0.7;
+
+        // Check if boolean
+        const booleanValues = ['true', 'false', 'yes', 'no', 'y', 'n', '1', '0'];
+        const booleanCount = columnValues.filter(v =>
+            booleanValues.includes(v.toLowerCase())
+        ).length;
+        const isBoolean = booleanCount > columnValues.length * 0.7;
+
+        if (isBoolean) {
+            alignments.push('center');
+        } else if (isNumeric) {
+            alignments.push(config.csvTableAlignNumbers);
+        } else {
+            alignments.push('left');
+        }
+    }
+
+    return alignments;
+}
+
+/**
+ * Register command to cycle through output modes
+ */
+function registerCycleCsvOutputModeCommand(context: vscode.ExtensionContext): void {
+    const command = vscode.commands.registerCommand(
+        'copyInfoWithContext.cycleCsvOutputMode',
+        async () => {
+            const config = vscode.workspace.getConfiguration('copyInfoWithContext');
+            const currentMode = config.get('csvOutputMode', 'minimal');
+
+            const modes: Array<'minimal' | 'smart' | 'table' | 'detailed'> = [
+                'minimal', 'smart', 'table', 'detailed'
+            ];
+
+            const currentIndex = modes.indexOf(currentMode as any);
+            const nextIndex = (currentIndex + 1) % modes.length;
+            const nextMode = modes[nextIndex]!;
+
+            await config.update('csvOutputMode', nextMode, true);
+
+            const icons = {
+                minimal: '⚡',
+                smart: '🎯',
+                table: '📊',
+                detailed: '🚀'
+            };
+
+            vscode.window.showInformationMessage(
+                `CSV Output Mode: ${nextMode.toUpperCase()} ${icons[nextMode]}`
+            );
+        }
+    );
+
+    context.subscriptions.push(command);
+}
+
 // Extension activation
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Copy Info with Context extension is now active!');
@@ -1539,6 +1995,9 @@ export function activate(context: vscode.ExtensionContext): void {
             await safeExecuteCommand(handleCopyWithCustomFormat);
         }
     });
+
+    // Register CSV Intelligence cycle mode command
+    registerCycleCsvOutputModeCommand(context);
 
     context.subscriptions.push(copyCommand, copyHtmlCommand, copyCustomCommand);
 }

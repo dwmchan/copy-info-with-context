@@ -123,6 +123,10 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 | `copyInfoWithContext.colorTheme` | `"dark"` | Color theme for syntax highlighting |
 | `copyInfoWithContext.showArrayIndices` | `true` | Show array indices in context paths |
 | `copyInfoWithContext.maxFileSize` | `5000000` | Maximum file size to process (bytes) |
+| `copyInfoWithContext.csvOutputMode` | `"minimal"` | CSV output mode: minimal, smart, table, or detailed |
+| `copyInfoWithContext.csvTableMaxRows` | `20` | Maximum rows to show in table format |
+| `copyInfoWithContext.csvTableMaxColumns` | `10` | Maximum columns to show in table format |
+| `copyInfoWithContext.csvTableAlignNumbers` | `"right"` | Number alignment in tables: left or right |
 
 ### Example Configuration
 ```json
@@ -135,6 +139,128 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 ```
 
 ## Key Features in Latest Version
+
+### ✨ NEW in v1.3.0: CSV Intelligence with Four Output Modes
+
+Copy CSV/TSV/PSV data exactly the way you need it - from compact to comprehensive. Press `Ctrl+Alt+X` (or `Cmd+Alt+X` on Mac) to cycle through modes, or set your preferred default in settings.
+
+#### 📋 Mode 1: MINIMAL ⚡
+**Best for**: Quick data sharing, compact output, single-line selections
+**Features**:
+- Clean, compact format with just the essentials
+- Automatic header detection from line 1
+- Smart partial field trimming (if you select mid-field, it auto-trims to the next complete field)
+- Column context in header (shows which columns you selected)
+
+**Example:**
+```
+// users.csv:5 (CSV (Comma-Separated) > Name, Email, Status)
+5: John Doe,john@example.com,Active
+```
+
+When you select starting from a partial field like `ware,Bob Smith,5bcfd3f9...`, MINIMAL mode automatically trims "ware" and outputs:
+```
+// data.csv:2 (CSV (Comma-Separated) > Project lead, Project lead id, Summary)
+2: Bob Smith,5bc4047479f99f6ec,Statement of Work Development
+```
+
+#### 🎯 Mode 2: SMART
+**Best for**: Understanding data types, code reviews, API documentation
+**Features**:
+- Automatic column type detection (String, Integer, Float, Boolean)
+- Column headers with types displayed
+- Line numbers for each row
+- Compact but informative format
+
+**Example:**
+```
+// products.csv:10-12
+// Columns: Product, Price, InStock, Rating
+// Types: String, Float, Boolean, Float
+
+10: Laptop, 999.99, true, 4.5
+11: Mouse, 29.99, false, 4.2
+12: Keyboard, 79.99, true, 4.8
+```
+
+#### 📊 Mode 3: TABLE
+**Best for**: Presentations, Slack/Teams, documentation, visual clarity
+**Features**:
+- Beautiful ASCII tables with Unicode box-drawing characters
+- Smart column alignment:
+  - Numbers: right-aligned
+  - Booleans: center-aligned
+  - Text: left-aligned
+- Automatic truncation with configurable limits
+- Type hints and row/column summary
+
+**Example:**
+```
+// transactions.csv:2-4 | 3 records
+
+┌────────────┬───────────┬─────────┬──────────┐
+│ Date       │ Merchant  │  Amount │ Status   │
+├────────────┼───────────┼─────────┼──────────┤
+│ 10/11/2025 │ PayPal    │   66.53 │ Pending  │
+│ 10/11/2025 │ Amazon    │  328.00 │ Complete │
+│ 10/11/2025 │ Transport │   10.00 │ Complete │
+└────────────┴───────────┴─────────┴──────────┘
+
+// Summary: 3 rows × 4 columns
+```
+
+Perfect for pasting into Slack, Teams, or documentation where visual clarity matters!
+
+#### 🚀 Mode 4: DETAILED
+**Best for**: Data analysis, debugging, comprehensive reports, understanding data patterns
+**Features**:
+- Everything from SMART mode, plus:
+- **Statistics**: Min/max/avg for numeric columns, most/least common values
+- **Insights**: Automatically identifies:
+  - Empty/null columns
+  - Identifier columns (emails, IDs, unique values)
+  - Category columns (status, type, etc.)
+  - Date/time columns
+- Full data intelligence for informed decision-making
+
+**Example:**
+```
+// sales.csv:2-5
+// Columns: Region, Sales, Growth, Category
+// Types: String, Float, Float, String
+
+// Statistics:
+//   Sales: min=1250.00, max=8900.50, avg=4523.17
+//   Growth: min=2.1, max=15.7, avg=8.3
+
+// Insights:
+//   Category columns: Region, Category
+//   Identifier columns: Region
+
+// Data:
+2: North, 8900.50, 15.7, Electronics
+3: South, 3420.75, 8.2, Furniture
+4: East, 5678.00, 12.1, Electronics
+5: West, 1250.00, 2.1, Clothing
+
+// Summary: 4 rows × 4 columns
+```
+
+#### 🎛️ Quick Mode Switching
+- **Keyboard**: Press `Ctrl+Alt+X` (or `Cmd+Alt+X` on Mac) while in a CSV file to cycle through modes
+- **Settings**: Set your preferred default mode in VS Code settings
+- **Smart Detection**: Works with CSV, TSV, PSV, SSV, DSV files
+- **Partial Field Handling**: All modes automatically trim incomplete fields at selection boundaries
+
+**Configuration:**
+```json
+{
+  "copyInfoWithContext.csvOutputMode": "minimal",  // or "smart", "table", "detailed"
+  "copyInfoWithContext.csvTableMaxRows": 20,       // Max rows in TABLE mode
+  "copyInfoWithContext.csvTableMaxColumns": 10,    // Max columns in TABLE mode
+  "copyInfoWithContext.csvTableAlignNumbers": "right"  // or "left"
+}
+```
 
 ### ✨ NEW in v1.2.0: Function/Class Context Detection
 - **What it does**: Automatically detects and displays the function, class, or method name in the copy header
@@ -320,6 +446,21 @@ Contributions are welcome! Please feel free to submit issues and enhancement req
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v1.3.0
+- ✨ Added CSV Intelligence with four output modes (Minimal, Smart, Table, Detailed)
+- ✅ **Minimal Mode**: Clean, compact output with automatic header detection
+- ✅ **Smart Mode**: Adds automatic type detection (String, Integer, Float, Boolean)
+- ✅ **Table Mode**: Beautiful ASCII tables with Unicode box-drawing characters
+- ✅ **Detailed Mode**: Full analytics with statistics and insights (min/max/avg, identifier detection, etc.)
+- ✅ Smart column alignment: right-align numbers, center booleans, left-align text
+- ✅ **Partial field trimming**: Automatically trims incomplete fields when selection starts mid-field
+- ✅ Automatic truncation for large datasets with configurable limits
+- ✅ Quick mode cycling with `Ctrl+Alt+X` keyboard shortcut
+- ✅ Perfect for copying data to Slack, documentation, and presentations
+- ✅ Configurable settings: max rows, max columns, number alignment
+- ✅ Works with single-line and multi-line selections
+- ✅ Domain intelligence: automatically recognizes transactions, issues, accounts, etc.
 
 ### v1.2.0
 - ✨ Added function/class/method context detection for programming languages
