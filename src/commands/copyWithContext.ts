@@ -6,6 +6,97 @@ import { formatCodeWithLineNumbers } from '../utils/formatting';
 import { detectDelimiter, parseDelimitedLine, buildAsciiTable, getDelimitedContextWithSelection } from '../utils/csvHelpers';
 import { getFileSizeInfo } from '../utils/fileHelpers';
 
+// Helper function to align CSV lines to the leftmost common column
+export function alignCsvLinesToLeftmostColumn(
+    lines: string[],
+    document: vscode.TextDocument,
+    selection: vscode.Selection,
+    startLine: number,
+    delimiter: string
+): string[] {
+    if (startLine <= 1 || lines.length === 0) {
+        return lines;
+    }
+
+    // For each line, determine which column it starts at
+    const lineColumnStarts: number[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        try {
+            const lineNumber = startLine - 1 + i;
+            const fullLine = document.lineAt(lineNumber).text;
+
+            // For multi-line selections, each line might start at a different character position
+            // First line uses selection.start.character, subsequent lines use selection.start.character if rectangular selection
+            // But typically for normal selections, we need to find where the selected text starts in the full line
+            let selectionStartChar: number;
+            if (i === 0) {
+                selectionStartChar = selection.start.character;
+            } else {
+                // For subsequent lines, find where the selected text appears in the full line
+                const selectedLineText = lines[i]!;
+                const indexInLine = fullLine.indexOf(selectedLineText);
+                selectionStartChar = indexInLine >= 0 ? indexInLine : 0;
+            }
+
+            // Count delimiters before selection
+            const beforeSelection = fullLine.substring(0, selectionStartChar);
+            const delimiterCount = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+
+            // Check if starts mid-field
+            const firstChar = lines[i]!.charAt(0);
+            const startsWithPartialField = firstChar !== delimiter && firstChar !== '"' && firstChar !== "'";
+
+            lineColumnStarts.push(startsWithPartialField ? delimiterCount + 1 : delimiterCount);
+        } catch {
+            lineColumnStarts.push(0);
+        }
+    }
+
+    // Find minimum (leftmost) column
+    const minColumn = Math.min(...lineColumnStarts);
+
+    // Trim each line back to minColumn
+    const trimmedLines: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+        try {
+            const lineNumber = startLine - 1 + i;
+            const fullLine = document.lineAt(lineNumber).text;
+            const currentColumn = lineColumnStarts[i]!;
+
+            if (currentColumn > minColumn) {
+                // Find position of minColumn-th delimiter
+                let delimitersSeen = 0;
+                let trimPosition = 0;
+
+                for (let pos = 0; pos < fullLine.length; pos++) {
+                    if (fullLine[pos] === delimiter) {
+                        delimitersSeen++;
+                        if (delimitersSeen === minColumn) {
+                            trimPosition = pos + 1;
+                            break;
+                        }
+                    }
+                }
+
+                if (minColumn === 0) {
+                    trimmedLines.push(fullLine);
+                } else if (trimPosition > 0) {
+                    trimmedLines.push(fullLine.substring(trimPosition));
+                } else {
+                    trimmedLines.push(lines[i]!);
+                }
+            } else {
+                trimmedLines.push(lines[i]!);
+            }
+        } catch {
+            trimmedLines.push(lines[i]!);
+        }
+    }
+
+    return trimmedLines;
+}
+
 // Main copy handler
 export async function handleCopyWithContext(): Promise<void> {
     const editor = vscode.window.activeTextEditor!;
@@ -51,38 +142,52 @@ export async function handleCopyWithContext(): Promise<void> {
         const lines = selectedText.split('\n').filter(line => line.trim().length > 0);
 
         if (lines.length > 0) {
-            // Detect if selection starts mid-field by checking if first character is a delimiter
-            let adjustedLines = lines;
-            let columnOffset = 0; // Track which column index we start from
+            // Align all lines to the leftmost column
+            const adjustedLines = alignCsvLinesToLeftmostColumn(lines, document, selection, startLine, delimiter);
 
-            // If selection starts after line 1, check if we need to trim partial columns
-            if (startLine > 1) {
-                // Check if the first line starts with a partial field (doesn't start with delimiter or quote)
-                const firstLine = lines[0]!;
-                const firstChar = firstLine.charAt(0);
+            // Calculate column offset (which column we start from after alignment)
+            let columnOffset = 0;
+            if (startLine > 1 && adjustedLines.length > 0) {
+                try {
+                    const fullLine = document.lineAt(startLine - 1).text;
+                    const selectionStart = selection.start.character;
+                    const firstChar = lines[0]!.charAt(0);
+                    const startsWithPartialField = firstChar !== delimiter && firstChar !== '"' && firstChar !== "'";
 
-                // If first character is not a delimiter and not a quote, we likely have a partial field
-                if (firstChar !== delimiter && firstChar !== '"' && firstChar !== "'") {
-                    // Find the first delimiter to skip the partial field
-                    const firstDelimiterIndex = firstLine.indexOf(delimiter);
-                    if (firstDelimiterIndex > 0) {
-                        // Adjust all lines to start from the first complete field
-                        adjustedLines = lines.map(line => {
-                            const delimiterIndex = line.indexOf(delimiter);
-                            return delimiterIndex > 0 ? line.substring(delimiterIndex + 1) : line;
-                        });
+                    // Count delimiters before selection
+                    const beforeSelection = fullLine.substring(0, selectionStart);
+                    const delimiterCount = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
 
-                        // Calculate column offset by counting delimiters before selection in the full line
-                        try {
-                            const fullLine = document.lineAt(startLine - 1).text; // Get full data row
-                            const selectionStart = selection.start.character;
-                            const beforeSelection = fullLine.substring(0, selectionStart);
-                            // Count complete fields before selection (delimiters + 1)
-                            columnOffset = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length + 1;
-                        } catch {
-                            columnOffset = 0;
+                    // If started with partial field, we're now at the next column
+                    columnOffset = startsWithPartialField ? delimiterCount + 1 : delimiterCount;
+
+                    // But we trimmed back to the minimum, so recalculate
+                    // Find the minimum column from all lines
+                    const lineColumnStarts: number[] = [];
+                    for (let i = 0; i < lines.length; i++) {
+                        const lineNumber = startLine - 1 + i;
+                        const lineFullText = document.lineAt(lineNumber).text;
+
+                        // For multi-line selections, find where the selected text actually starts in the full line
+                        let lineSelStart: number;
+                        if (i === 0) {
+                            lineSelStart = selection.start.character;
+                        } else {
+                            // Find where the selected text appears in the full line
+                            const selectedLineText = lines[i]!;
+                            const indexInLine = lineFullText.indexOf(selectedLineText);
+                            lineSelStart = indexInLine >= 0 ? indexInLine : 0;
                         }
+
+                        const lineBeforeSelection = lineFullText.substring(0, lineSelStart);
+                        const lineDelimiterCount = (lineBeforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+                        const lineFirstChar = lines[i]!.charAt(0);
+                        const lineStartsPartial = lineFirstChar !== delimiter && lineFirstChar !== '"' && lineFirstChar !== "'";
+                        lineColumnStarts.push(lineStartsPartial ? lineDelimiterCount + 1 : lineDelimiterCount);
                     }
+                    columnOffset = Math.min(...lineColumnStarts);
+                } catch {
+                    columnOffset = 0;
                 }
             }
 
@@ -295,24 +400,9 @@ export async function handleCopyWithContext(): Promise<void> {
             const delimiter = detectDelimiter(document.getText());
             const lines = selectedText.split('\n');
 
-            if (lines.length > 0) {
-                const firstLine = lines[0]!;
-                const firstChar = firstLine.charAt(0);
-
-                // If first character is not a delimiter and not a quote, we likely have a partial field
-                if (firstChar !== delimiter && firstChar !== '"' && firstChar !== "'") {
-                    // Find the first delimiter to skip the partial field
-                    const firstDelimiterIndex = firstLine.indexOf(delimiter);
-                    if (firstDelimiterIndex > 0) {
-                        // Trim all lines to start from the first complete field
-                        const trimmedLines = lines.map(line => {
-                            const delimiterIndex = line.indexOf(delimiter);
-                            return delimiterIndex > 0 ? line.substring(delimiterIndex + 1) : line;
-                        });
-                        selectedText = trimmedLines.join('\n');
-                    }
-                }
-            }
+            // Align all lines to the leftmost column
+            const trimmedLines = alignCsvLinesToLeftmostColumn(lines, document, selection, startLine, delimiter);
+            selectedText = trimmedLines.join('\n');
         }
     }
 

@@ -193,37 +193,79 @@ export function getDelimitedContextWithSelection(document: vscode.TextDocument, 
 
         // Parse headers properly, considering quoted fields
         const headers = parseDelimitedLine(firstLine, delimiter);
-        const currentLine = lines[selection.start.line];
-
-        if (!currentLine) return delimiterName;
-
-        // Parse the current line to find which columns are selected
-        const fields = parseDelimitedLine(currentLine, delimiter);
 
         // Check if first row looks like headers - use YOUR function signature (text: string)
         const hasHeaders = detectHeaders(text);
 
-        // Find which columns are covered by the selection
-        const columnRange = getColumnRangeFromSelection(currentLine, selection, delimiter, fields);
+        // For multi-line selections, we need to find the column range across ALL selected lines
+        let minStartColumn: number | null = null;
+        let maxEndColumn: number | null = null;
 
-        if (columnRange) {
-            const { startColumn, endColumn } = columnRange;
+        // Get the selected text to find where it appears in each line
+        const selectedText = document.getText(selection);
+        const selectedLines = selectedText.split('\n');
 
-            if (startColumn === endColumn) {
+        for (let i = 0; i <= selection.end.line - selection.start.line; i++) {
+            const lineNum = selection.start.line + i;
+            const currentLine = lines[lineNum];
+            if (!currentLine) continue;
+
+            // Find where the selected text actually starts in this line
+            const selectedLineText = selectedLines[i];
+            if (!selectedLineText) continue;
+
+            let actualSelectionStart: number;
+            if (i === 0) {
+                actualSelectionStart = selection.start.character;
+            } else {
+                // Find where the selected text appears in the full line
+                const indexInLine = currentLine.indexOf(selectedLineText);
+                actualSelectionStart = indexInLine >= 0 ? indexInLine : 0;
+            }
+
+            const actualSelectionEnd = actualSelectionStart + selectedLineText.length;
+
+            // Create a virtual selection object for this line
+            const lineSelection = new vscode.Selection(
+                new vscode.Position(lineNum, actualSelectionStart),
+                new vscode.Position(lineNum, actualSelectionEnd)
+            );
+
+            // Parse the current line to find which columns are selected
+            const fields = parseDelimitedLine(currentLine, delimiter);
+
+            // Find which columns are covered by the selection on this line
+            const columnRange = getColumnRangeFromSelection(currentLine, lineSelection, delimiter, fields);
+
+            if (columnRange) {
+                const { startColumn, endColumn } = columnRange;
+
+                if (minStartColumn === null || startColumn < minStartColumn) {
+                    minStartColumn = startColumn;
+                }
+                if (maxEndColumn === null || endColumn > maxEndColumn) {
+                    maxEndColumn = endColumn;
+                }
+            }
+        }
+
+        // Use the min/max range across all selected lines
+        if (minStartColumn !== null && maxEndColumn !== null) {
+            if (minStartColumn === maxEndColumn) {
                 // Single column - TypeScript safe
                 let columnName: string;
-                const header = headers[startColumn];
-                if (hasHeaders && startColumn < headers.length && header != null && header !== undefined) {
+                const header = headers[minStartColumn];
+                if (hasHeaders && minStartColumn < headers.length && header != null && header !== undefined) {
                     columnName = header.trim().replace(/^["']|["']$/g, '');
                 } else {
-                    columnName = `Column ${startColumn + 1}`;
+                    columnName = `Column ${minStartColumn + 1}`;
                 }
                 return `${delimiterName} > ${columnName}`;
             } else {
                 // Multiple columns - TypeScript safe
                 const columnNames: string[] = [];
 
-                for (let i = startColumn; i <= endColumn; i++) {
+                for (let i = minStartColumn; i <= maxEndColumn; i++) {
                     const header = headers[i];
                     if (hasHeaders && i < headers.length && header != null && header !== undefined) {
                         const headerName = header.trim().replace(/^["']|["']$/g, '');

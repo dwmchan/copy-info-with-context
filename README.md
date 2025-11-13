@@ -447,6 +447,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### v1.3.1
+- 🐛 Fixed CSV multi-line selection trimming to align all lines to the leftmost common column
+- ✅ Finds the leftmost column position across all selected lines and trims all lines back to that column
+- ✅ Headers now correctly reflect all visible columns across all selected rows
+- ✅ Applies to all CSV output modes (Minimal, Smart, Table, Detailed)
+- ✅ Applies to all copy formats (Plain Text, HTML, Markdown, ANSI)
+
 ### v1.3.0
 - ✨ Added CSV Intelligence with four output modes (Minimal, Smart, Table, Detailed)
 - ✅ **Minimal Mode**: Clean, compact output with automatic header detection

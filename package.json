@@ -2,7 +2,7 @@
   "name": "copy-info-with-context",
   "displayName": "Copy Info with Context",
   "description": "Copy code snippets with intelligent contextual information - filename, line numbers, and smart path detection for structured data. Perfect for documentation, code reviews, debugging, and sharing code with proper attribution.",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "publisher": "DonaldChan",
   "author": {
     "name": "Donald Chan",
@@ -50,6 +50,7 @@
     "vscode": "^1.74.0"
   },
   "categories": [
+    "Formatters",
     "Other"
   ],
   "icon": "icon.png",

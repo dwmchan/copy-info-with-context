@@ -4,6 +4,7 @@ import { getConfig } from '../utils/config';
 import { getDocumentContext, enhancePathWithArrayIndices } from '../utils/documentContext';
 import { formatCodeWithLineNumbers } from '../utils/formatting';
 import { getDelimitedContextWithSelection } from '../utils/csvHelpers';
+import { alignCsvLinesToLeftmostColumn } from './copyWithContext';
 
 export async function handleCopyWithMarkdown(): Promise<void> {
     const editor = vscode.window.activeTextEditor!;
@@ -32,14 +33,31 @@ export async function handleCopyWithMarkdown(): Promise<void> {
 
     const config = getConfig();
 
+    // CSV trimming: Remove partial fields from multi-line selections
+    const filename = document.fileName.toLowerCase();
+    const language = document.languageId;
+    const isCSVFile = (
+        language === 'csv' || language === 'tsv' || language === 'psv' ||
+        filename.endsWith('.csv') || filename.endsWith('.tsv') ||
+        filename.endsWith('.psv') || filename.endsWith('.ssv') ||
+        filename.endsWith('.dsv')
+    );
+
+    if (isCSVFile && !selection.isEmpty) {
+        const { detectDelimiter } = require('../utils/csvHelpers');
+        const delimiter = detectDelimiter(document.getText());
+        const lines = selectedText.split('\n');
+
+        // Align all lines to the leftmost column
+        const trimmedLines = alignCsvLinesToLeftmostColumn(lines, document, selection, startLine, delimiter);
+        selectedText = trimmedLines.join('\n');
+    }
+
     let contextInfo = '';
     if (config.showContextPath) {
         let context = getDocumentContext(document, selection.start);
 
         if (!context && !selection.isEmpty) {
-            const filename = document.fileName.toLowerCase();
-            const language = document.languageId;
-
             const isExplicitlyDelimited = (
                 language === 'csv' || language === 'tsv' || language === 'psv' ||
                 filename.endsWith('.csv') || filename.endsWith('.tsv') ||
@@ -72,7 +90,6 @@ export async function handleCopyWithMarkdown(): Promise<void> {
         config.lineNumberPadding
     );
 
-    const language = document.languageId;
     const header = `// ${displayName}${lineNumberInfo}${contextInfo}`;
     const markdownOutput = `${header}\n\`\`\`${language}\n${formattedContent}\n\`\`\``;
 
