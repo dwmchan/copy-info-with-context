@@ -1,2 +1,5 @@
 node_modules
+out
 claude.md
+out/extension.js.map
+out/extension.js
