@@ -38,6 +38,47 @@ This extension was created to solve exactly these problems - providing rich cont
 - **Smart Color Coding**: Professional color schemes for different themes
 - **Delimited Files**: Auto-detects CSV, TSV, PSV, SSV with proper formatting
 
+### 🔒 Smart Data Masking (NEW)
+Protect sensitive data when sharing code! Automatically detect and mask PII (Personally Identifiable Information):
+
+- **Personal Information**: Email addresses, phone numbers, physical addresses
+- **Financial Data**: Credit cards (Visa, MasterCard, Amex), bank account numbers, SSN
+- **Australian Banking**: BSB codes, TFN (Tax File Numbers), ABN (Business Numbers), Medicare numbers
+- **Enterprise Identifiers**: Client/Customer numbers, reference numbers, policy numbers, transaction IDs
+- **International Banking**: IBAN, SWIFT/BIC codes, routing numbers
+- **Utilities**: NMI (National Meter Identifier) and other industry-specific identifiers
+
+**Industry Presets**:
+- **Basic**: Email and phone masking only
+- **Financial Services**: Comprehensive banking and credit card protection
+- **Healthcare**: Medical records and patient information
+- **Enterprise**: All patterns enabled
+- **Custom**: Define your own patterns
+
+**Masking Strategies**:
+- **Partial** (default): `j***@e***.com` - Shows first/last characters
+- **Full**: `***` - Complete replacement
+- **Structural**: `***-**-1234` - Preserves format
+- **Hash**: `#A3F8B2` - Deterministic hashing
+
+**Perfect for**:
+- ✅ Bug reports with customer data
+- ✅ Documentation with real examples
+- ✅ Code reviews with production configs
+- ✅ Training materials with actual records
+- ✅ GDPR, CCPA, HIPAA compliance
+
+**Example**:
+```csv
+// Before masking:
+EmailAddress,BSB,AccountNo,ClientNo
+john.doe@example.com,123-456,987654321,CUST-00012345
+
+// After masking (partial strategy):
+EmailAddress,BSB,AccountNo,ClientNo
+j***@e***.com,***-*56,***321,C***5
+```
+
 ### ⚡ Performance & Reliability
 - **Smart Dedenting**: Automatically removes excessive indentation while preserving code structure
 - **Fixed Indexing Issues**: Accurate array/sibling counting for JSON and XML
@@ -127,14 +168,60 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 | `copyInfoWithContext.csvTableMaxRows` | `20` | Maximum rows to show in table format |
 | `copyInfoWithContext.csvTableMaxColumns` | `10` | Maximum columns to show in table format |
 | `copyInfoWithContext.csvTableAlignNumbers` | `"right"` | Number alignment in tables: left or right |
+| **Data Masking** | | |
+| `copyInfoWithContext.enableDataMasking` | `false` | Enable automatic detection and masking of sensitive data (PII) |
+| `copyInfoWithContext.maskingMode` | `"auto"` | Masking sensitivity: auto, manual, or strict |
+| `copyInfoWithContext.maskingStrategy` | `"partial"` | Masking strategy: partial, full, structural, or hash |
+| `copyInfoWithContext.maskingPreset` | `"none"` | Industry preset: none, basic, financial, healthcare, enterprise, or custom |
+| `copyInfoWithContext.maskingDenyList` | `[]` | Column names that should ALWAYS be masked (e.g., ["email", "ssn", "BSB"]) |
+| `copyInfoWithContext.maskingAllowList` | `[]` | Column names that should NEVER be masked (overrides auto-detection) |
+| `copyInfoWithContext.showMaskingIndicator` | `true` | Show visual indicator in status bar when masking is active |
+| `copyInfoWithContext.includeMaskingStats` | `false` | Include statistics about masked items in output |
+| `copyInfoWithContext.maskingCustomPatterns` | `[]` | Custom regex patterns for company-specific sensitive data |
 
 ### Example Configuration
+
+**Basic Configuration:**
 ```json
 {
   "copyInfoWithContext.showLineNumbers": true,
   "copyInfoWithContext.showContextPath": true,
   "copyInfoWithContext.enableColorCoding": false,
   "copyInfoWithContext.maxFileSize": 10000000
+}
+```
+
+**Data Masking for Financial Services:**
+```json
+{
+  "copyInfoWithContext.enableDataMasking": true,
+  "copyInfoWithContext.maskingPreset": "financial",
+  "copyInfoWithContext.maskingStrategy": "partial",
+  "copyInfoWithContext.maskingDenyList": [
+    "BSB",
+    "Account Number",
+    "Client ID",
+    "Customer Number"
+  ],
+  "copyInfoWithContext.maskingCustomPatterns": [
+    {
+      "name": "Internal Customer ID",
+      "pattern": "CUST-\\d{8}",
+      "replacement": "CUST-########",
+      "enabled": true
+    }
+  ]
+}
+```
+
+**Data Masking for Healthcare:**
+```json
+{
+  "copyInfoWithContext.enableDataMasking": true,
+  "copyInfoWithContext.maskingPreset": "healthcare",
+  "copyInfoWithContext.maskingStrategy": "full",
+  "copyInfoWithContext.showMaskingIndicator": true,
+  "copyInfoWithContext.includeMaskingStats": true
 }
 ```
 
