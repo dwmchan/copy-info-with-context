@@ -20,7 +20,8 @@ export function formatCodeWithLineNumbers(
     }, Infinity);
 
     // Determine how much to strip: if min > 2, strip enough to bring it down to acceptable level
-    const stripAmount = minIndent > 2 ? minIndent : 0;
+    // Handle case where all lines are empty (minIndent would be Infinity)
+    const stripAmount = (minIndent !== Infinity && minIndent > 2) ? minIndent : 0;
 
     const numberedLines = lines.map((line: string, index: number) => {
         const lineNumber = startLine + index;
