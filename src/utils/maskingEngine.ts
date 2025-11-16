@@ -224,7 +224,7 @@ const DETECTION_PATTERNS: Record<string, RegExp> = {
     clientNumber: /\b(?:Client|Customer|Cust|Member)[#:\s-]*(?:No|Number|Num|ID)[#:\s-]*(\d{4,12})\b/gi,
     referenceNumber: /\b(?:Ref|Reference|Invoice)[#:\s-]*(?:No|Number|Num)?[#:\s-]*([A-Z0-9]{6,15})\b/gi,
     policyNumber: /\b(?:Policy|POL)[#:\s-]*(?:No|Number)?[#:\s-]*([A-Z0-9]{6,15})\b/gi,
-    transactionID: /\b(?:TXN|Transaction|Trans)[#:\s-]*(?:ID|No)?[#:\s-]*([A-Z0-9]{8,20})\b/gi,
+    transactionID: /\b(?:TXN|Transaction|Trans)[#:\s-]*(?:ID|No|Number)?[#:\s-]*([A-Z0-9]{8,20})\b/gi,
     nmi: /\b[A-Z0-9]{10,11}\b/g,
 
     // === INTERNATIONAL BANKING ===
@@ -239,6 +239,62 @@ const DETECTION_PATTERNS: Record<string, RegExp> = {
     // Address - more specific pattern
     address: /\b\d+\s+(?:[A-Z][a-z]+\s*){1,4}(?:STREET|ST|ROAD|RD|AVENUE|AVE|LANE|LN|DRIVE|DR|BUILDING|UNIT|SUITE|APT)\b/gi
 };
+
+/**
+ * Check if a match position is inside a field name/tag name
+ * Returns true if the match should be skipped (it's part of a field name, not a value)
+ */
+function isInsideFieldName(text: string, matchIndex: number, matchLength: number): boolean {
+    const matchEnd = matchIndex + matchLength;
+
+    // Look back and forward to check context
+    const lookbackStart = Math.max(0, matchIndex - 50);
+    const lookforwardEnd = Math.min(text.length, matchEnd + 50);
+
+    const beforeMatch = text.substring(lookbackStart, matchIndex);
+    const afterMatch = text.substring(matchEnd, lookforwardEnd);
+
+    // Check if we're between < and > (XML/HTML tag)
+    const lastOpenAngle = beforeMatch.lastIndexOf('<');
+    const lastCloseAngle = beforeMatch.lastIndexOf('>');
+    const nextCloseAngle = afterMatch.indexOf('>');
+
+    if (lastOpenAngle > lastCloseAngle && nextCloseAngle !== -1) {
+        // We're inside an XML tag (between < and >)
+        return true;
+    }
+
+    // Check if we're in a JSON field name: "fieldName":
+    const lastQuote = beforeMatch.lastIndexOf('"');
+    if (lastQuote !== -1 && /^\s*"?\s*:/.test(afterMatch)) {
+        // Pattern: "...match...": - it's a JSON field name
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Check if a date match should be excluded because it's in a non-birth-date field
+ * Returns true if the date appears to be a service/business date, not a birth date
+ */
+function isNonBirthDateField(text: string, matchIndex: number): boolean {
+    // Keywords that indicate this is NOT a birth date
+    const exclusionKeywords = [
+        'eligible', 'service', 'start', 'end', 'expiry', 'expire', 'effective', 'transaction',
+        'created', 'modified', 'updated', 'deleted', 'issued', 'commence', 'completion',
+        'payment', 'settlement', 'process', 'registration', 'enrollment', 'join', 'leave',
+        'termination', 'cancellation', 'renewal', 'anniversary', 'due', 'maturity',
+        'valuation', 'assessment', 'review', 'audit', 'report', 'statement', 'financial'
+    ];
+
+    // Look at context before the match (100 chars to capture field name)
+    const contextStart = Math.max(0, matchIndex - 100);
+    const contextBefore = text.substring(contextStart, matchIndex).toLowerCase();
+
+    // Check if any exclusion keyword appears in the context
+    return exclusionKeywords.some(keyword => contextBefore.includes(keyword));
+}
 
 const SENSITIVE_COLUMN_PATTERNS: Record<string, string[]> = {
     email: ['email', 'e-mail', 'emailaddress', 'mail', 'email_address'],
@@ -708,17 +764,6 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
         // Check if this pattern type is enabled (with fallback to mapped category)
         const configKey = typeMapping[type] || type;
 
-        // Debug logging for dateOfBirth
-        if (type === 'dateOfBirth') {
-            console.log('[Masking Debug] dateOfBirth pattern check:', {
-                type,
-                configKey,
-                enabled: effectiveConfig.types[configKey],
-                hasPattern: !!pattern.source,
-                pattern: pattern.source
-            });
-        }
-
         if (!effectiveConfig.types[configKey] || !pattern.source) continue;
 
         // Reset regex lastIndex
@@ -726,16 +771,21 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
 
         const matches = Array.from(text.matchAll(pattern));
 
-        // Debug logging for dateOfBirth matches
-        if (type === 'dateOfBirth' && matches.length > 0) {
-            console.log('[Masking Debug] dateOfBirth matches found:', matches.length, matches.map(m => m[0]));
-        }
-
         for (const match of matches) {
             const originalValue = match[0];
 
             // Skip if already detected by another pattern
             if (replacements.has(originalValue)) continue;
+
+            // Skip if this match is inside a field name/tag name
+            if (isInsideFieldName(text, match.index!, originalValue.length)) {
+                continue;
+            }
+
+            // Special handling for dateOfBirth: skip if it's in a non-birth-date field
+            if (type === 'dateOfBirth' && isNonBirthDateField(text, match.index!)) {
+                continue;
+            }
 
             const maskFn = MASKING_FUNCTIONS[type] || maskGeneric;
             const maskedValue = maskFn(originalValue, effectiveConfig.strategy);
