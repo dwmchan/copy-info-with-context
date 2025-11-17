@@ -180,6 +180,7 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 | `copyInfoWithContext.maskingPreset` | `"none"` | Industry preset: none, basic, financial, healthcare, enterprise, or custom |
 | `copyInfoWithContext.maskingDenyList` | `[]` | Column names that should ALWAYS be masked (e.g., ["email", "ssn", "BSB"]) |
 | `copyInfoWithContext.maskingAllowList` | `[]` | Column names that should NEVER be masked (overrides auto-detection) |
+| `copyInfoWithContext.maskingConfidenceThreshold` | `0.7` | **NEW v1.4.1** - Minimum confidence (0.0-1.0) to mask. Higher = fewer false positives. Recommended: 0.7 |
 | `copyInfoWithContext.showMaskingIndicator` | `true` | Show visual indicator in status bar when masking is active |
 | `copyInfoWithContext.includeMaskingStats` | `false` | Include statistics about masked items in output |
 | `copyInfoWithContext.maskingCustomPatterns` | `[]` | Custom regex patterns for company-specific sensitive data |
@@ -235,7 +236,35 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 
 ## Key Features in Latest Version
 
-### 🎉 NEW in v1.4.0: Smart Data Masking (Phase 1)
+### 🎯 NEW in v1.4.1: Context-Aware Masking with Confidence Scoring
+
+**Intelligent masking that understands context!** Eliminates false positives by analyzing surrounding text.
+
+**What's New:**
+- ✅ **Confidence Scoring Algorithm**: Calculates 0.0-1.0 confidence for each match before masking
+- ✅ **Context Analysis**: Analyzes 100 characters before/after to understand intent
+- ✅ **Smart Detection**: Distinguishes "Reference: ABC123" (mask) from "Payment Info Reference [10]" (don't mask)
+- ✅ **Configurable Threshold**: `maskingConfidenceThreshold` (default: 0.7) - adjust sensitivity
+- ✅ **No More False Positives**: Natural language and ticket descriptions preserved
+
+**Example:**
+```
+✅ Before: "CIB-5625 - Payment Info R***e [10] not displaying"
+✅ After:  "CIB-5625 - Payment Info Reference [10] not displaying"
+
+Still masks: "Reference: ABC123456" → "R***6" ✓
+```
+
+**Configuration:**
+```json
+{
+  "copyInfoWithContext.maskingConfidenceThreshold": 0.7  // 0.5=aggressive, 0.7=balanced, 0.9=conservative
+}
+```
+
+---
+
+### 🎉 v1.4.0: Smart Data Masking (Phase 1)
 
 **Protect sensitive data when sharing code!** Automatically detect and mask 25+ types of PII (Personally Identifiable Information) with industry-specific presets and configurable strategies.
 
@@ -257,6 +286,7 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 - ✅ **Identity Documents**: Passports, driver's licenses, national IDs (AU/US/UK/EU)
 - ✅ **Field Name Protection**: Never masks XML/JSON tag names, only values
 - ✅ **Date Intelligence**: Distinguishes birth dates from service/transaction dates using 25 exclusion keywords
+- ✅ **Context-Aware Confidence Scoring** (v1.4.1): Eliminates false positives in plain text
 - ✅ **100% Local**: No cloud processing, GDPR/CCPA/HIPAA compliant
 - ✅ **Opt-In Design**: Disabled by default - you control when to use it
 

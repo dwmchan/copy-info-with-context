@@ -95,6 +95,7 @@ export interface MaskingConfig {
     showIndicator: boolean;
     includeStats: boolean;
     customPatterns: CustomPattern[];
+    confidenceThreshold: number; // 0.0 to 1.0 - minimum confidence to mask (default: 0.7)
 }
 
 export interface CustomPattern {
@@ -158,7 +159,8 @@ export function getMaskingConfig(): MaskingConfig {
             pattern: typeof p.pattern === 'string' ? new RegExp(p.pattern, 'g') : p.pattern,
             replacement: p.replacement,
             enabled: p.enabled !== false
-        }))
+        })),
+        confidenceThreshold: config.get('maskingConfidenceThreshold', 0.7)
     };
 }
 
@@ -272,6 +274,105 @@ function isInsideFieldName(text: string, matchIndex: number, matchLength: number
     }
 
     return false;
+}
+
+/**
+ * Calculate confidence score for whether a match should be masked in plain text
+ * Returns a score from 0.0 (don't mask) to 1.0 (definitely mask)
+ *
+ * This helps avoid false positives in natural language text while still catching real PII
+ */
+function calculateMaskingConfidence(
+    text: string,
+    matchIndex: number,
+    matchValue: string,
+    patternType: string
+): number {
+    const matchEnd = matchIndex + matchValue.length;
+
+    // Context windows
+    const contextBefore = text.substring(Math.max(0, matchIndex - 100), matchIndex);
+    const contextAfter = text.substring(matchEnd, Math.min(text.length, matchEnd + 100));
+    const immediateAfter = text.substring(matchEnd, Math.min(text.length, matchEnd + 30));
+
+    let confidence = 0.5; // Start at neutral
+
+    // === FACTORS THAT INCREASE CONFIDENCE (should mask) ===
+
+    // 1. Has a clear label pattern before it (e.g., "Reference:", "Ref #:", "Invoice No:")
+    if (/(?:ref|reference|invoice|policy|account|client|customer|id|number|no)[#:\s-]*$/i.test(contextBefore)) {
+        confidence += 0.3;
+    }
+
+    // 2. Followed by alphanumeric code/number pattern (e.g., "Reference ABC123" or "Ref: 12345")
+    if (/^\s*[#:\s-]*([A-Z0-9]{4,})/i.test(immediateAfter)) {
+        confidence += 0.25;
+    }
+
+    // 3. Appears on its own line or isolated (structured data pattern)
+    const lineContext = contextBefore.substring(contextBefore.lastIndexOf('\n') + 1);
+    if (/^\s*$/.test(lineContext)) {
+        confidence += 0.15;
+    }
+
+    // 4. Part of a key-value pair with common separators
+    if (/[:|=]\s*$/.test(contextBefore)) {
+        confidence += 0.2;
+    }
+
+    // === FACTORS THAT DECREASE CONFIDENCE (don't mask) ===
+
+    // 1. Part of natural flowing text (surrounded by common words)
+    const commonWords = /\b(the|a|an|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|should|could|may|might|must|can|of|to|for|with|on|at|in|by|from|as|this|that|these|those|but|or|and|not|no)\b/i;
+    const hasNaturalLanguageBefore = commonWords.test(contextBefore.substring(contextBefore.length - 30));
+    const hasNaturalLanguageAfter = commonWords.test(contextAfter.substring(0, 30));
+
+    if (hasNaturalLanguageBefore || hasNaturalLanguageAfter) {
+        confidence -= 0.3;
+    }
+
+    // 2. Not followed by structured data (no numbers, codes, or separators nearby)
+    if (!/[:\-#0-9]/.test(immediateAfter.substring(0, 20))) {
+        confidence -= 0.2;
+    }
+
+    // 3. Matched word is just part of a larger descriptive phrase
+    // (e.g., "Payment Info Reference" where "Reference" is just a column label)
+    const surroundingText = contextBefore.substring(contextBefore.length - 50) + matchValue + contextAfter.substring(0, 50);
+    if (/[a-zA-Z]\s+[a-zA-Z]+\s+[a-zA-Z]/i.test(surroundingText) && !/[:\-#]/.test(surroundingText)) {
+        confidence -= 0.25;
+    }
+
+    // 4. Appears at start of line followed by a dash (likely a title/header, not data)
+    // e.g., "- Reference Documentation" or "Reference - John Smith"
+    if (/^\s*-?\s*$/s.test(contextBefore.substring(contextBefore.lastIndexOf('\n') + 1)) &&
+        /^\s*-/.test(immediateAfter)) {
+        confidence -= 0.4;
+    }
+
+    // 5. Part of a ticket/issue ID format (e.g., "CIB-5625")
+    // In this case "Reference" is just descriptive text, not a PII label
+    const lineText = text.substring(
+        text.lastIndexOf('\n', matchIndex) + 1,
+        text.indexOf('\n', matchEnd) > 0 ? text.indexOf('\n', matchEnd) : text.length
+    );
+    if (/^[A-Z]+-\d+/.test(lineText.trim())) {
+        // This line starts with a ticket ID pattern - it's likely a ticket description
+        confidence -= 0.35;
+    }
+
+    // === PATTERN-SPECIFIC ADJUSTMENTS ===
+
+    // For reference numbers specifically, be more conservative
+    if (patternType === 'referenceNumber') {
+        // Only mask if there's a clear label + value pattern
+        if (!(/(?:ref|reference|invoice)[#:\s-]*$/i.test(contextBefore) && /^\s*[#:\s-]*([A-Z0-9]{4,})/i.test(immediateAfter))) {
+            confidence -= 0.2;
+        }
+    }
+
+    // Clamp confidence between 0 and 1
+    return Math.max(0, Math.min(1, confidence));
 }
 
 /**
@@ -787,6 +888,14 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                 continue;
             }
 
+            // Calculate confidence score for this match
+            const confidence = calculateMaskingConfidence(text, match.index!, originalValue, type);
+
+            // Skip if confidence is below threshold
+            if (confidence < effectiveConfig.confidenceThreshold) {
+                continue;
+            }
+
             const maskFn = MASKING_FUNCTIONS[type] || maskGeneric;
             const maskedValue = maskFn(originalValue, effectiveConfig.strategy);
 
@@ -802,7 +911,7 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                 maskedValue,
                 line,
                 column,
-                confidence: 0.9
+                confidence
             });
 
             // Store replacement

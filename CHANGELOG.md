@@ -2,6 +2,49 @@
 
 All notable changes to the "Copy Info with Context" extension will be documented in this file.
 
+## [1.4.1] - 2025-11-17
+
+### 🎯 Enhancement: Context-Aware Masking with Confidence Scoring
+
+**Intelligent masking that understands context!** Eliminates false positives in plain text by analyzing surrounding context.
+
+#### Added
+
+**Context-Aware Confidence Scoring:**
+- ✅ New confidence-based masking algorithm (0.0 to 1.0 score)
+- ✅ Analyzes 100 characters before/after each match
+- ✅ Distinguishes between PII labels and natural language
+- ✅ Special detection for ticket descriptions and column headers
+- ✅ Configurable confidence threshold
+
+**New Configuration:**
+- `maskingConfidenceThreshold` (default: 0.7)
+  - 0.5 = More aggressive (may over-mask)
+  - 0.7 = Balanced (recommended)
+  - 0.9 = Conservative (minimal false positives)
+
+**Smart Context Detection:**
+- Increases confidence for clear label+value patterns ("Reference: ABC123")
+- Decreases confidence for natural language ("the reference documentation")
+- Detects ticket/issue ID patterns (e.g., "CIB-5625")
+- Recognizes descriptive phrases ("Payment Info Reference [10]")
+- Identifies title/header formats ("Reference - Documentation")
+
+#### Fixed
+- Reference numbers in plain text ticket descriptions no longer incorrectly masked
+- "Payment Info Reference [10]" now correctly identified as descriptive text
+- Natural language usage of words like "reference", "policy", "invoice" preserved
+
+**Example:**
+```
+Before: "CIB-5625 - Payment Info R***e [10] not displaying"  ❌
+After:  "CIB-5625 - Payment Info Reference [10] not displaying"  ✅
+
+Still masks: "Reference: ABC123456" → "R***6"  ✅
+```
+
+---
+
 ## [1.4.0] - 2025-11-17
 
 ### 🎉 Major Feature: Smart Data Masking (Phase 1)

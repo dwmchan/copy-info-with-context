@@ -2,7 +2,7 @@
   "name": "copy-info-with-context",
   "displayName": "Copy Info with Context",
   "description": "Copy code snippets with intelligent contextual information - filename, line numbers, smart path detection, and automatic PII masking. Perfect for documentation, code reviews, debugging, and sharing code with proper attribution and privacy protection.",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "publisher": "DonaldChan",
   "author": {
     "name": "Donald Chan",
@@ -316,6 +316,13 @@
           "type": "boolean",
           "default": false,
           "description": "Include statistics about masked items in copied output (e.g., '// 3 items masked')"
+        },
+        "copyInfoWithContext.maskingConfidenceThreshold": {
+          "type": "number",
+          "default": 0.7,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Minimum confidence score (0.0-1.0) required to mask a detected pattern. Higher values reduce false positives in plain text. Recommended: 0.7 for balanced protection, 0.5 for more aggressive masking, 0.9 for minimal false positives."
         },
         "copyInfoWithContext.maskingCustomPatterns": {
           "type": "array",
