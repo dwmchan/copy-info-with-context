@@ -38,6 +38,45 @@ This extension was created to solve exactly these problems - providing rich cont
 - **Smart Color Coding**: Professional color schemes for different themes
 - **Delimited Files**: Auto-detects CSV, TSV, PSV, SSV with proper formatting
 
+### 🔒 Smart Data Masking (NEW)
+Protect sensitive data when sharing code! Automatically detect and mask PII (Personally Identifiable Information):
+
+> **⚠️ Note:** Data masking is **disabled by default**. You need to enable it manually in settings to use this feature.
+
+**To Enable:**
+```json
+{
+  "copyInfoWithContext.enableDataMasking": true,
+  "copyInfoWithContext.maskingPreset": "financial"  // or "basic", "healthcare", "enterprise"
+}
+```
+
+**What It Protects:**
+- **Personal Information**: Email, phone, address, date of birth
+- **Financial Data**: Credit cards, bank accounts, SSN, IBAN, SWIFT/BIC
+- **Australian Banking**: BSB, TFN, ABN, Medicare
+- **Identity Documents**: Passports, driver's licenses, national IDs (AU/US/UK/EU)
+- **Enterprise Identifiers**: Client numbers, transactions, policies, NMI
+
+**Industry Presets**: Basic, Financial, Healthcare, Enterprise, Custom
+
+**Masking Strategies**: Partial (readable), Full (maximum privacy), Structural (format-preserving)
+
+**Example**:
+```csv
+// Before masking:
+Name,Email,BSB,DateOfBirth,Passport
+John Doe,john@example.com,123-456,1986-05-28,N1234567
+
+// After masking (partial):
+Name,Email,BSB,DateOfBirth,Passport
+John Doe,j***@e***.com,***-*56,1986-**-**,N*****7
+```
+
+**📖 [Complete Data Masking Guide →](GUIDE-DATA-MASKING.md)** | **Quick Start:** Press `Ctrl+,` → Search "masking" → Enable feature
+
+Perfect for bug reports, documentation, code reviews, and compliance (GDPR, CCPA, HIPAA)
+
 ### ⚡ Performance & Reliability
 - **Smart Dedenting**: Automatically removes excessive indentation while preserving code structure
 - **Fixed Indexing Issues**: Accurate array/sibling counting for JSON and XML
@@ -61,6 +100,13 @@ This extension was created to solve exactly these problems - providing rich cont
 4. Press Enter and reload VS Code
 
 Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=donald-chan.copy-info-with-context).
+
+## 📚 Feature Guides
+
+**Comprehensive documentation for major features:**
+
+- **[📊 CSV Intelligence Guide](GUIDE-CSV-INTELLIGENCE.md)** - Four output modes (MINIMAL, SMART, TABLE, DETAILED), delimiter detection, and smart formatting for CSV/TSV/PSV files
+- **[🔒 Data Masking Guide](GUIDE-DATA-MASKING.md)** - Complete PII protection with 25+ data types, industry presets, masking strategies, and compliance information
 
 ## Usage Examples
 
@@ -127,8 +173,20 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 | `copyInfoWithContext.csvTableMaxRows` | `20` | Maximum rows to show in table format |
 | `copyInfoWithContext.csvTableMaxColumns` | `10` | Maximum columns to show in table format |
 | `copyInfoWithContext.csvTableAlignNumbers` | `"right"` | Number alignment in tables: left or right |
+| **Data Masking** | | **⚠️ Disabled by default** |
+| `copyInfoWithContext.enableDataMasking` | `false` | **Enable automatic detection and masking of sensitive data (PII)** - Must be enabled manually |
+| `copyInfoWithContext.maskingMode` | `"auto"` | Masking sensitivity: auto, manual, or strict |
+| `copyInfoWithContext.maskingStrategy` | `"partial"` | Masking strategy: partial, full, structural, or hash |
+| `copyInfoWithContext.maskingPreset` | `"none"` | Industry preset: none, basic, financial, healthcare, enterprise, or custom |
+| `copyInfoWithContext.maskingDenyList` | `[]` | Column names that should ALWAYS be masked (e.g., ["email", "ssn", "BSB"]) |
+| `copyInfoWithContext.maskingAllowList` | `[]` | Column names that should NEVER be masked (overrides auto-detection) |
+| `copyInfoWithContext.showMaskingIndicator` | `true` | Show visual indicator in status bar when masking is active |
+| `copyInfoWithContext.includeMaskingStats` | `false` | Include statistics about masked items in output |
+| `copyInfoWithContext.maskingCustomPatterns` | `[]` | Custom regex patterns for company-specific sensitive data |
 
 ### Example Configuration
+
+**Basic Configuration:**
 ```json
 {
   "copyInfoWithContext.showLineNumbers": true,
@@ -138,9 +196,88 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 }
 ```
 
+**Data Masking for Financial Services:**
+
+> **Note:** Data masking is disabled by default. Set `enableDataMasking: true` to activate.
+
+```json
+{
+  "copyInfoWithContext.enableDataMasking": true,  // ⚠️ Required to enable masking
+  "copyInfoWithContext.maskingPreset": "financial",
+  "copyInfoWithContext.maskingStrategy": "partial",
+  "copyInfoWithContext.maskingDenyList": [
+    "BSB",
+    "Account Number",
+    "Client ID",
+    "Customer Number"
+  ],
+  "copyInfoWithContext.maskingCustomPatterns": [
+    {
+      "name": "Internal Customer ID",
+      "pattern": "CUST-\\d{8}",
+      "replacement": "CUST-########",
+      "enabled": true
+    }
+  ]
+}
+```
+
+**Data Masking for Healthcare:**
+```json
+{
+  "copyInfoWithContext.enableDataMasking": true,  // ⚠️ Required to enable masking
+  "copyInfoWithContext.maskingPreset": "healthcare",
+  "copyInfoWithContext.maskingStrategy": "full",
+  "copyInfoWithContext.showMaskingIndicator": true,
+  "copyInfoWithContext.includeMaskingStats": true
+}
+```
+
 ## Key Features in Latest Version
 
-### ✨ NEW in v1.3.0: CSV Intelligence with Four Output Modes
+### 🎉 NEW in v1.4.0: Smart Data Masking (Phase 1)
+
+**Protect sensitive data when sharing code!** Automatically detect and mask 25+ types of PII (Personally Identifiable Information) with industry-specific presets and configurable strategies.
+
+> **⚠️ Important:** This feature is **disabled by default**. Enable it in settings: `"copyInfoWithContext.enableDataMasking": true`
+
+**How to Enable:**
+1. Press `Ctrl+,` (Windows/Linux) or `Cmd+,` (Mac) to open Settings
+2. Search for "masking"
+3. Enable `Copy Info With Context: Enable Data Masking`
+4. Choose your preset (Basic, Financial, Healthcare, Enterprise)
+
+**What's New:**
+- ✅ **25+ PII Types**: Email, phone, DOB, credit cards, bank accounts, passports, driver's licenses, and more
+- ✅ **Smart Detection**: Pattern-based + column name recognition + context-aware exclusions
+- ✅ **Industry Presets**: Basic, Financial, Healthcare, Enterprise, Custom
+- ✅ **4 Masking Strategies**: Partial (readable), Full (maximum privacy), Structural (format-preserving), Hash (future)
+- ✅ **Australian Support**: BSB, TFN, ABN, Medicare, Australian passports/licenses
+- ✅ **International Banking**: IBAN, SWIFT/BIC, routing numbers
+- ✅ **Identity Documents**: Passports, driver's licenses, national IDs (AU/US/UK/EU)
+- ✅ **Field Name Protection**: Never masks XML/JSON tag names, only values
+- ✅ **Date Intelligence**: Distinguishes birth dates from service/transaction dates using 25 exclusion keywords
+- ✅ **100% Local**: No cloud processing, GDPR/CCPA/HIPAA compliant
+- ✅ **Opt-In Design**: Disabled by default - you control when to use it
+
+**Example:**
+```csv
+// Before masking:
+Name,Email,Phone,BSB,AccountNo,DateOfBirth,Passport
+John Doe,john@example.com,0412 345 678,123-456,987654321,1986-05-28,N1234567
+
+// After masking (partial strategy, financial preset):
+Name,Email,Phone,BSB,AccountNo,DateOfBirth,Passport
+John Doe,j***@e***.com,0*** *** ***,***-*56,***321,1986-**-**,N*****7
+```
+
+**Perfect for:** Bug reports with customer data, documentation with real examples, code reviews with production configs, HIPAA/GDPR compliance
+
+**📖 [Complete Data Masking Guide →](GUIDE-DATA-MASKING.md)**
+
+---
+
+### ✨ v1.3.0: CSV Intelligence with Four Output Modes
 
 Copy CSV/TSV/PSV data exactly the way you need it - from compact to comprehensive. Press `Ctrl+Alt+X` (or `Cmd+Alt+X` on Mac) to cycle through modes, or set your preferred default in settings.
 
@@ -251,6 +388,8 @@ Perfect for pasting into Slack, Teams, or documentation where visual clarity mat
 - **Settings**: Set your preferred default mode in VS Code settings
 - **Smart Detection**: Works with CSV, TSV, PSV, SSV, DSV files
 - **Partial Field Handling**: All modes automatically trim incomplete fields at selection boundaries
+
+**📖 [Complete CSV Intelligence Guide →](GUIDE-CSV-INTELLIGENCE.md)**
 
 **Configuration:**
 ```json
@@ -447,52 +586,44 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### v1.3.1
-- 🐛 Fixed CSV multi-line selection trimming to align all lines to the leftmost common column
-- ✅ Finds the leftmost column position across all selected lines and trims all lines back to that column
+### [1.4.0] - 2025-11-17
+
+#### 🎉 Major Feature: Smart Data Masking (Phase 1)
+
+**Added:**
+- ✅ Automatic detection and masking of 25+ PII types
+- ✅ 5 industry presets: None, Basic, Financial, Healthcare, Enterprise, Custom
+- ✅ 4 masking strategies: Partial, Full, Structural, Hash (future)
+- ✅ Support for email, phone, DOB, credit cards, bank accounts, passports, driver's licenses, and more
+- ✅ Australian banking: BSB, TFN, ABN, Medicare
+- ✅ International banking: IBAN, SWIFT/BIC, routing numbers
+- ✅ Identity documents: Passports, licenses, national IDs (AU/US/UK/EU)
+- ✅ Smart detection: Pattern-based + column name recognition + context-aware exclusions
+- ✅ Field name protection: Never masks XML/JSON tag names, only values
+- ✅ Date intelligence: Distinguishes birth dates from service/transaction dates (25 exclusion keywords)
+- ✅ 100% local processing - GDPR/CCPA/HIPAA compliant
+- ✅ Comprehensive guides: [Data Masking Guide](GUIDE-DATA-MASKING.md) and [CSV Intelligence Guide](GUIDE-CSV-INTELLIGENCE.md)
+
+**Fixed:**
+- ✅ XML/JSON tag names no longer masked (e.g., `<transactionDate>` preserved)
+- ✅ Service dates excluded from birth date masking
+
+**Note:** Data masking is **disabled by default** and must be enabled manually.
+
+---
+
+### [1.3.1] - 2024-11-14
+
+**Fixed:**
+- ✅ CSV multi-line selection trimming to align all lines to the leftmost common column
 - ✅ Headers now correctly reflect all visible columns across all selected rows
-- ✅ Applies to all CSV output modes (Minimal, Smart, Table, Detailed)
-- ✅ Applies to all copy formats (Plain Text, HTML, Markdown, ANSI)
+- ✅ Applies to all CSV output modes and copy formats
 
-### v1.3.0
-- ✨ Added CSV Intelligence with four output modes (Minimal, Smart, Table, Detailed)
-- ✅ **Minimal Mode**: Clean, compact output with automatic header detection
-- ✅ **Smart Mode**: Adds automatic type detection (String, Integer, Float, Boolean)
-- ✅ **Table Mode**: Beautiful ASCII tables with Unicode box-drawing characters
-- ✅ **Detailed Mode**: Full analytics with statistics and insights (min/max/avg, identifier detection, etc.)
-- ✅ Smart column alignment: right-align numbers, center booleans, left-align text
-- ✅ **Partial field trimming**: Automatically trims incomplete fields when selection starts mid-field
-- ✅ Automatic truncation for large datasets with configurable limits
-- ✅ Quick mode cycling with `Ctrl+Alt+X` keyboard shortcut
-- ✅ Perfect for copying data to Slack, documentation, and presentations
-- ✅ Configurable settings: max rows, max columns, number alignment
-- ✅ Works with single-line and multi-line selections
-- ✅ Domain intelligence: automatically recognizes transactions, issues, accounts, etc.
+---
 
-### v1.2.0
-- ✨ Added function/class/method context detection for programming languages
-- ✅ JavaScript/TypeScript: Detects functions, arrow functions, classes, and methods
-- ✅ C#: Detects methods, classes, and namespaces with full path (e.g., `MyApp.Services > UserService > ProcessData`)
-- ✅ Python: Detects functions and class methods
-- ✅ PowerShell: Detects functions (including Verb-Noun cmdlets), advanced functions, and classes
-- ✅ Context appears in copy header (e.g., `// extension.ts:684-691 (detectDelimiter)`)
-- ✅ Works with all copy formats (plain text, HTML, Markdown, ANSI)
+**📜 [View Complete Changelog →](CHANGELOG.md)**
 
-### v1.1.0
-- ✨ Added smart dedenting algorithm that preserves code structure while removing excessive indentation
-- ✅ Maintains relative hierarchy in deeply nested XML/JSON/code
-- ✅ Backward compatible - code with ≤2 spaces unchanged
-- ✅ Efficient single-pass implementation with O(n) complexity
-
-### v1.0.0
-- ✅ Fixed XML sibling indexing issue (Relation[5] → Relation[2])
-- ✅ Fixed JSON array indexing for nested structures
-- ✅ Fixed JSON vs CSV file type detection priority
-- ✅ Fixed line numbering consistency across all formats
-- ✅ Implemented memory-efficient processing algorithms
-- ✅ Added comprehensive test suite using Node.js built-in testing
-- ✅ Enhanced error handling and fallback mechanisms
-- ✅ Improved performance for large files
+For detailed release notes, bug fixes, and features from all versions, see the [CHANGELOG.md](CHANGELOG.md) file.
 
 ## Support
 

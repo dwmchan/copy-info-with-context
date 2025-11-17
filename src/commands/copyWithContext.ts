@@ -5,6 +5,15 @@ import { getDocumentContext, enhancePathWithArrayIndices } from '../utils/docume
 import { formatCodeWithLineNumbers } from '../utils/formatting';
 import { detectDelimiter, parseDelimitedLine, buildAsciiTable, getDelimitedContextWithSelection } from '../utils/csvHelpers';
 import { getFileSizeInfo } from '../utils/fileHelpers';
+import {
+    maskText,
+    maskCsvText,
+    getMaskingConfig,
+    updateMaskingStatusBar,
+    showMaskingNotification,
+    formatOutputWithMaskingStats,
+    MaskedResult
+} from '../utils/maskingEngine';
 
 // Helper function to align CSV lines to the leftmost common column
 export function alignCsvLinesToLeftmostColumn(
@@ -123,12 +132,65 @@ export async function handleCopyWithContext(): Promise<void> {
         endLine = selection.end.line + 1;
     }
 
+    // File type detection (used for masking and CSV processing)
+    const language = document.languageId;
+    const filename = document.fileName.toLowerCase();
+
+    // ========== DATA MASKING ==========
+    const maskingConfig = getMaskingConfig();
+    let maskedResult: MaskedResult;
+
+    if (maskingConfig.enabled) {
+        // Check if CSV file for column-aware masking
+        const isCsvFile = (
+            language === 'csv' || language === 'tsv' || language === 'psv' ||
+            filename.endsWith('.csv') || filename.endsWith('.tsv') ||
+            filename.endsWith('.psv') || filename.endsWith('.ssv') ||
+            filename.endsWith('.dsv')
+        );
+
+        if (isCsvFile) {
+            // For CSV, we need to provide headers if user selected data rows without header
+            const delimiter = detectDelimiter(document.getText());
+            let headersLine: string | undefined;
+
+            // If selection starts after line 1, get the header from line 1
+            if (startLine > 1) {
+                try {
+                    headersLine = document.lineAt(0).text;
+                } catch {
+                    // If we can't get line 1, fall back to treating first selected line as header
+                    headersLine = undefined;
+                }
+            }
+
+            maskedResult = maskCsvText(selectedText, maskingConfig, headersLine);
+        } else {
+            maskedResult = maskText(selectedText, maskingConfig);
+        }
+
+        // Use masked text for further processing
+        selectedText = maskedResult.maskedText;
+
+        // Show user feedback
+        updateMaskingStatusBar(maskedResult, maskingConfig);
+        if (maskedResult.detections.length > 0) {
+            showMaskingNotification(maskedResult, maskingConfig);
+        }
+    } else {
+        maskedResult = {
+            maskedText: selectedText,
+            detections: [],
+            maskingApplied: false
+        };
+    }
+    // ======================================
+
     const config = getConfig();
     const sizeInfo = getFileSizeInfo(document);
 
     // Check if this is a CSV file and TABLE mode is enabled
-    const filename = document.fileName.toLowerCase();
-    const language = document.languageId;
+    // (filename and language already declared in masking section above)
     const isCSVFile = (
         language === 'csv' || language === 'tsv' || language === 'psv' ||
         filename.endsWith('.csv') || filename.endsWith('.tsv') ||

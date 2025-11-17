@@ -1,8 +1,8 @@
 {
   "name": "copy-info-with-context",
   "displayName": "Copy Info with Context",
-  "description": "Copy code snippets with intelligent contextual information - filename, line numbers, and smart path detection for structured data. Perfect for documentation, code reviews, debugging, and sharing code with proper attribution.",
-  "version": "1.3.1",
+  "description": "Copy code snippets with intelligent contextual information - filename, line numbers, smart path detection, and automatic PII masking. Perfect for documentation, code reviews, debugging, and sharing code with proper attribution and privacy protection.",
+  "version": "1.4.0",
   "publisher": "DonaldChan",
   "author": {
     "name": "Donald Chan",
@@ -28,8 +28,16 @@
     "code-sharing",
     "documentation",
     "syntax-highlighting",
+    "data-masking",
+    "pii-protection",
+    "privacy",
+    "gdpr",
+    "hipaa",
+    "compliance",
+    "sensitive-data",
+    "redaction",
     "javascript",
-    "typescript", 
+    "typescript",
     "python",
     "csharp",
     "xml",
@@ -184,6 +192,144 @@
           "enum": ["left", "right"],
           "default": "right",
           "description": "Alignment for numeric columns in tables"
+        },
+        "copyInfoWithContext.enableDataMasking": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic detection and masking of sensitive data (PII)"
+        },
+        "copyInfoWithContext.maskingMode": {
+          "type": "string",
+          "enum": ["auto", "manual", "strict"],
+          "enumDescriptions": [
+            "Mask common PII patterns automatically (email, phone, SSN, banking info)",
+            "Only mask when explicitly selected columns/patterns match deny-list",
+            "Mask all potential PII with high sensitivity (may have false positives)"
+          ],
+          "default": "auto",
+          "description": "Data masking detection sensitivity"
+        },
+        "copyInfoWithContext.maskingStrategy": {
+          "type": "string",
+          "enum": ["partial", "full", "structural", "hash"],
+          "enumDescriptions": [
+            "Partial masking - Show first/last characters (j***@e***.com)",
+            "Full masking - Complete replacement with asterisks (***)",
+            "Structural masking - Preserve format (***-**-1234)",
+            "Hash masking - Deterministic hash codes (#A3F8B2)"
+          ],
+          "default": "partial",
+          "description": "Default masking strategy for detected PII"
+        },
+        "copyInfoWithContext.maskingPreset": {
+          "type": "string",
+          "enum": ["none", "basic", "financial", "healthcare", "enterprise", "custom"],
+          "enumDescriptions": [
+            "No masking",
+            "Basic - Email and phone only",
+            "Financial Services - Banking, credit cards, account numbers",
+            "Healthcare - Medical records and patient information",
+            "Enterprise - All detection patterns enabled",
+            "Custom - Use only user-defined patterns"
+          ],
+          "default": "none",
+          "description": "Preset masking configuration for different industries"
+        },
+        "copyInfoWithContext.maskingDenyList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Column names or patterns that should ALWAYS be masked (case-insensitive). Example: ['email', 'ssn', 'accountno', 'BSB', 'Client Number']"
+        },
+        "copyInfoWithContext.maskingAllowList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Column names that should NEVER be masked, overriding auto-detection. Example: ['id', 'code', 'status']"
+        },
+        "copyInfoWithContext.maskingTypes": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "boolean", "default": true },
+            "phone": { "type": "boolean", "default": true },
+            "ssn": { "type": "boolean", "default": true },
+            "dateOfBirth": { "type": "boolean", "default": true },
+            "passportNumber": { "type": "boolean", "default": true },
+            "driversLicense": { "type": "boolean", "default": true },
+            "nationalID": { "type": "boolean", "default": true },
+            "creditCard": { "type": "boolean", "default": true },
+            "address": { "type": "boolean", "default": true },
+            "accountNumber": { "type": "boolean", "default": true },
+            "ipAddress": { "type": "boolean", "default": false },
+            "nmi": { "type": "boolean", "default": true },
+            "australianBSB": { "type": "boolean", "default": true },
+            "australianTFN": { "type": "boolean", "default": true },
+            "australianABN": { "type": "boolean", "default": true },
+            "australianMedicare": { "type": "boolean", "default": true },
+            "clientNumber": { "type": "boolean", "default": true },
+            "referenceNumber": { "type": "boolean", "default": false },
+            "policyNumber": { "type": "boolean", "default": false },
+            "transactionID": { "type": "boolean", "default": false },
+            "iban": { "type": "boolean", "default": true },
+            "swift": { "type": "boolean", "default": true },
+            "routingNumber": { "type": "boolean", "default": false },
+            "custom": { "type": "boolean", "default": false }
+          },
+          "default": {
+            "email": true,
+            "phone": true,
+            "ssn": true,
+            "dateOfBirth": true,
+            "passportNumber": true,
+            "driversLicense": true,
+            "nationalID": true,
+            "creditCard": true,
+            "address": true,
+            "accountNumber": true,
+            "ipAddress": false,
+            "nmi": true,
+            "australianBSB": true,
+            "australianTFN": true,
+            "australianABN": true,
+            "australianMedicare": true,
+            "clientNumber": true,
+            "referenceNumber": false,
+            "policyNumber": false,
+            "transactionID": false,
+            "iban": true,
+            "swift": true,
+            "routingNumber": false,
+            "custom": false
+          },
+          "description": "Enable/disable masking for specific data types"
+        },
+        "copyInfoWithContext.showMaskingIndicator": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show visual indicator in status bar when masking is active"
+        },
+        "copyInfoWithContext.includeMaskingStats": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include statistics about masked items in copied output (e.g., '// 3 items masked')"
+        },
+        "copyInfoWithContext.maskingCustomPatterns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "pattern": { "type": "string" },
+              "replacement": { "type": "string" },
+              "enabled": { "type": "boolean" }
+            }
+          },
+          "default": [],
+          "description": "Custom regex patterns for company-specific sensitive data. Example: [{\"name\": \"Internal Customer ID\", \"pattern\": \"CUST-\\\\d{8}\", \"replacement\": \"CUST-########\", \"enabled\": true}]"
         }
       }
     },
