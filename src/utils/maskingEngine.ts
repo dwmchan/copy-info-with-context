@@ -288,32 +288,47 @@ function isInsideFieldName(text: string, matchIndex: number, matchLength: number
 const PATTERN_PRIOR_PROBABILITIES: Record<string, number> = {
     // High reliability patterns (rarely false positives)
     email: 0.85,
-    credit_card: 0.90,
-    australian_medicare: 0.95,
+    creditCard: 0.90,
+    creditCardVisa: 0.90,
+    creditCardMastercard: 0.90,
+    creditCardAmex: 0.90,
+    creditCardGeneric: 0.90,
+    australianMedicare: 0.95,
     ssn: 0.90,
     iban: 0.92,
-    australian_tfn: 0.85,
-    australian_abn: 0.85,
+    australianTFN: 0.85,
+    australianABN: 0.85,
 
     // Medium reliability patterns
     phone: 0.70,
-    australian_bsb: 0.75,
-    passport_number: 0.70,
-    drivers_license: 0.70,
-    national_id: 0.70,
-    australian_passport: 0.75,
-    us_passport: 0.75,
-    uk_passport: 0.75,
+    australianPhone: 0.70,
+    australianBSB: 0.80,  // High confidence - BSB codes are reliable identifiers
+    australianAccountNumber: 0.75,  // Added missing pattern
+    passportNumber: 0.70,
+    driversLicense: 0.70,
+    nationalID: 0.70,
+    australianPassport: 0.75,
+    usPassport: 0.75,
+    ukPassport: 0.75,
+    euPassport: 0.75,
+    australianDriversLicense: 0.70,
+    usDriversLicense: 0.70,
+    ukDriversLicense: 0.75,  // UK DL has specific format, higher confidence
+    ukNationalInsurance: 0.80,
     swift: 0.80,
-    routing_number: 0.75,
+    routingNumber: 0.75,
+    nmi: 0.70,
 
     // Low reliability patterns (high false positive risk)
-    reference_number: 0.40,
-    transaction_id: 0.45,
-    policy_number: 0.50,
-    client_number: 0.55,
-    date_of_birth: 0.60,  // Many false positives from service dates
-    account_number: 0.65,
+    referenceNumber: 0.40,
+    transactionID: 0.45,
+    policyNumber: 0.50,
+    clientNumber: 0.55,
+    dateOfBirth: 0.60,  // Many false positives from service dates
+    accountNumber: 0.65,
+    address: 0.50,  // Address detection can have false positives
+    ipv4: 0.60,
+    ipv6: 0.65,
 
     // Custom patterns (user-defined)
     custom: 0.65
@@ -323,18 +338,35 @@ const PATTERN_PRIOR_PROBABILITIES: Record<string, number> = {
  * Check for statistical anomalies that indicate test data or placeholders
  * Returns a confidence multiplier (0.0 to 1.0)
  */
-function checkStatisticalAnomalies(value: string): number {
+function checkStatisticalAnomalies(value: string, patternType?: string): number {
     // Check for repeated patterns (e.g., "111-111-1111" is unlikely real phone)
     const hasRepeatedDigits = /(\d)\1{4,}/.test(value);
     if (hasRepeatedDigits) {
         return 0.2;
     }
 
-    // Check for sequential patterns (e.g., "123456789" is unlikely real SSN)
-    const digits = value.replace(/\D/g, '');
-    const hasSequential = /(?:0123|1234|2345|3456|4567|5678|6789|7890|9876|8765|7654|6543|5432|4321|3210)/.test(digits);
-    if (hasSequential) {
-        return 0.3;
+    // Patterns that should SKIP sequential check (structured identifiers with valid sequential patterns)
+    const skipSequentialCheck = [
+        'australianBSB',           // BSB codes like 633-123 (Up Bank) are sequential by design
+        'routingNumber',           // Bank routing numbers can have sequential digits
+        'swift',                   // SWIFT codes are structured, not random
+        'iban',                    // IBANs have check digits and structure
+        'nmi',                     // National Meter Identifiers are structured
+        'referenceNumber',         // Reference numbers often sequential
+        'transactionID',           // Transaction IDs often sequential
+        'policyNumber',            // Policy numbers often sequential
+        'clientNumber',            // Client numbers often sequential
+        'accountNumber'            // Account numbers often sequential
+    ];
+
+    // Only check for sequential patterns if this pattern type should be checked
+    if (!patternType || !skipSequentialCheck.includes(patternType)) {
+        // Check for sequential patterns (e.g., "123456789" is unlikely real SSN)
+        const digits = value.replace(/\D/g, '');
+        const hasSequential = /(?:0123|1234|2345|3456|4567|5678|6789|7890|9876|8765|7654|6543|5432|4321|3210)/.test(digits);
+        if (hasSequential) {
+            return 0.3;
+        }
     }
 
     // Check for common placeholder patterns
@@ -445,7 +477,7 @@ function calculateMaskingConfidence(
     let confidence = priorProbability;
 
     // PHASE 1: Check for statistical anomalies (test data, placeholders)
-    const statisticalConfidence = checkStatisticalAnomalies(matchValue);
+    const statisticalConfidence = checkStatisticalAnomalies(matchValue, patternType);
     if (statisticalConfidence < 0.5) {
         // Strong evidence this is test/placeholder data
         return statisticalConfidence * 0.5; // Cap at 0.25 max
@@ -1084,6 +1116,75 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
         'ipv6': 'ipAddress'
     };
 
+    // ========================================================================
+    // FIELD-NAME-BASED DETECTION (JSON/XML)
+    // Check field names first - higher confidence than pattern matching
+    // ========================================================================
+
+    // Detect if this is JSON or XML content
+    const isJsonContent = /^\s*[\[{]/.test(text) || /"[^"]+"\s*:/.test(text);
+    const isXmlContent = /<[^>]+>/.test(text);
+
+    if (isJsonContent || isXmlContent) {
+        // Find all potential field values (quoted strings and unquoted values)
+        const valuePatterns = [
+            /"([^"]+)"\s*:\s*"([^"]+)"/g,       // JSON: "field": "value"
+            /"([^"]+)"\s*:\s*([0-9\s\-]+)/g,   // JSON: "field": 123 or "field": 123-456
+            /<([^>\s/]+)>([^<]+)<\/\1>/g        // XML: <field>value</field>
+        ];
+
+        for (const valuePattern of valuePatterns) {
+            valuePattern.lastIndex = 0;
+            const matches = Array.from(text.matchAll(valuePattern));
+
+            for (const match of matches) {
+                const fieldName = match[1];
+                const value = match[2];
+
+                // Skip if field name or value is undefined
+                if (!fieldName || !value) continue;
+
+                // Skip if already detected
+                if (replacements.has(value)) continue;
+
+                // Skip if value is empty or just whitespace
+                if (!value.trim()) continue;
+
+                // Attempt to mask by field name
+                const maskedValue = maskByFieldName(value, fieldName, effectiveConfig.strategy, effectiveConfig);
+
+                if (maskedValue !== null) {
+                    // Calculate position info
+                    const valueIndex = text.indexOf(value, match.index!);
+                    const beforeMatch = text.substring(0, valueIndex);
+                    const line = (beforeMatch.match(/\n/g) || []).length + 1;
+                    const lastNewline = beforeMatch.lastIndexOf('\n');
+                    const column = valueIndex - (lastNewline + 1);
+
+                    // Determine pattern type for detection
+                    const patternType = detectColumnType(fieldName) as PiiType;
+
+                    detections.push({
+                        type: patternType,
+                        originalValue: value,
+                        maskedValue,
+                        line,
+                        column,
+                        confidence: 0.95  // High confidence for field-name-based detection
+                    });
+
+                    // Store replacement
+                    replacements.set(value, maskedValue);
+                }
+            }
+        }
+    }
+
+    // ========================================================================
+    // PATTERN-BASED DETECTION
+    // Fallback for values not caught by field names
+    // ========================================================================
+
     // Pattern-based detection - collect all matches first
     for (const [type, pattern] of Object.entries(DETECTION_PATTERNS)) {
         // Check if this pattern type is enabled (with fallback to mapped category)
@@ -1350,6 +1451,62 @@ function detectColumnType(columnName: string): string {
     }
 
     return 'custom';
+}
+
+/**
+ * Extract JSON field name from context before a value
+ * Returns the field name if found, or null
+ * Example: "accountNumber": "123456" → returns "accountNumber"
+ */
+function extractJsonFieldName(contextBefore: string): string | null {
+    // Look for pattern: "fieldName": or 'fieldName':
+    const match = contextBefore.match(/["']([^"']+)["']\s*:\s*["']?\s*$/);
+    return match && match[1] ? match[1] : null;
+}
+
+/**
+ * Extract XML tag name from context before a value
+ * Returns the tag name if found, or null
+ * Example: <accountNumber>123456 → returns "accountNumber"
+ */
+function extractXmlTagName(contextBefore: string, contextAfter: string): string | null {
+    // Look for pattern: <tagName> before value and </tagName> after
+    const openTagMatch = contextBefore.match(/<([^>\s/]+)[^>]*>\s*$/);
+    if (!openTagMatch || !openTagMatch[1]) return null;
+
+    const tagName = openTagMatch[1];
+
+    // Verify closing tag exists after (optional check for confidence)
+    const closeTagPattern = new RegExp(`^\\s*</${tagName}>`);
+    if (closeTagPattern.test(contextAfter)) {
+        return tagName;
+    }
+
+    // Return tag name even without close tag verification (might be on different line)
+    return tagName;
+}
+
+/**
+ * Attempt to mask a value based on its field/tag name in JSON/XML
+ * Returns masked value if field name matches sensitive patterns, or null if no match
+ */
+function maskByFieldName(
+    value: string,
+    fieldName: string,
+    strategy: string,
+    config: MaskingConfig
+): string | null {
+    const patternType = detectColumnType(fieldName);
+
+    // Check if this pattern type is enabled in config
+    const configKey = patternType as keyof typeof config.types;
+    if (config.types[configKey] === false) {
+        return null;
+    }
+
+    // Get masking function
+    const maskFn = MASKING_FUNCTIONS[patternType] || maskGeneric;
+    return maskFn(value, strategy);
 }
 
 // ============================================================================
