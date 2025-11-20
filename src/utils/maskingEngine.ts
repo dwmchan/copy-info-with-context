@@ -173,7 +173,8 @@ const DETECTION_PATTERNS: Record<string, RegExp> = {
     email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
     phone: /\b(?:\+?(\d{1,3}))?[-.\s]?\(?(\d{2,4})\)?[-.\s]?(\d{3,4})[-.\s]?(\d{4})\b/g,
     ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
-    dateOfBirth: /\b\d{4}[-/]\d{2}[-/]\d{2}\b/g, // YYYY-MM-DD or YYYY/MM/DD
+    // Date of Birth - Multiple international formats
+    dateOfBirth: /\b(?:\d{4}[-/.]\d{2}[-/.]\d{2}|\d{2}[-/.]\d{2}[-/.]\d{4}|\d{2}[-/.\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-/.\s]\d{4})\b/gi,
 
     // === IDENTITY DOCUMENTS ===
     // Australian Passport: Letter followed by 7 digits (e.g., N1234567)
@@ -743,24 +744,80 @@ function maskSSN(ssn: string, strategy: string): string {
 }
 
 function maskDateOfBirth(dob: string, strategy: string): string {
-    // Expected format: YYYY-MM-DD or YYYY/MM/DD
-    const separator = dob.includes('/') ? '/' : '-';
-    const parts = dob.split(separator);
+    // Detect separator and format
+    const separators = ['-', '/', '.', ' '];
+    let separator = '-';
 
-    if (parts.length !== 3) return '****-**-**';
-
-    switch (strategy) {
-        case 'partial':
-            // Show only the year, mask month and day
-            return `${parts[0]}${separator}**${separator}**`;
-        case 'full':
-            return `****${separator}**${separator}**`;
-        case 'structural':
-            // Mask year and month, show day
-            return `****${separator}**${separator}${parts[2]}`;
-        default:
-            return dob;
+    // Find which separator is used
+    for (const sep of separators) {
+        if (dob.includes(sep)) {
+            separator = sep;
+            break;
+        }
     }
+
+    // Detect if it's a month name format (e.g., "28 May 1986" or "28-May-1986")
+    const monthNamePattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b/i;
+    const hasMonthName = monthNamePattern.test(dob);
+
+    if (hasMonthName) {
+        // Format: DD-MMM-YYYY or DD MMM YYYY
+        const parts = dob.split(/[-/.\s]+/);
+        if (parts.length !== 3 || !parts[0] || !parts[2]) return '**' + separator + '***' + separator + '****';
+
+        switch (strategy) {
+            case 'partial':
+                // Show year, mask day and month
+                return '**' + separator + '***' + separator + parts[2];
+            case 'full':
+                return '**' + separator + '***' + separator + '****';
+            case 'structural':
+                // Show day, mask month and year
+                return parts[0] + separator + '***' + separator + '****';
+            default:
+                return dob;
+        }
+    }
+
+    // Split by detected separator
+    const parts = dob.split(separator);
+    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
+        return '****' + separator + '**' + separator + '**';
+    }
+
+    // Detect format based on part lengths and values
+    if (parts[0].length === 4) {
+        // YYYY-MM-DD format
+        switch (strategy) {
+            case 'partial':
+                // Show year, mask month and day
+                return `${parts[0]}${separator}**${separator}**`;
+            case 'full':
+                return `****${separator}**${separator}**`;
+            case 'structural':
+                // Mask year and month, show day
+                return `****${separator}**${separator}${parts[2]}`;
+            default:
+                return dob;
+        }
+    } else if (parts[2].length === 4) {
+        // DD-MM-YYYY or MM-DD-YYYY format
+        switch (strategy) {
+            case 'partial':
+                // Show year, mask day and month
+                return `**${separator}**${separator}${parts[2]}`;
+            case 'full':
+                return `**${separator}**${separator}****`;
+            case 'structural':
+                // Show day, mask month and year
+                return `${parts[0]}${separator}**${separator}****`;
+            default:
+                return dob;
+        }
+    }
+
+    // Fallback
+    return '****' + separator + '**' + separator + '**';
 }
 
 function maskPassport(passport: string, strategy: string): string {

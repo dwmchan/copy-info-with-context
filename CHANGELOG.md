@@ -2,6 +2,94 @@
 
 All notable changes to the "Copy Info with Context" extension will be documented in this file.
 
+## [1.4.4] - 2025-11-21
+
+### 🌍 Enhancement: International Date Format Support
+
+**Extended date of birth masking to support all major international date formats.**
+
+#### Added
+
+**International Date Format Detection:**
+- ✅ **ISO 8601 Format**: `YYYY-MM-DD`, `YYYY/MM/DD` (Asia, International)
+- ✅ **European/Australian Format**: `DD-MM-YYYY`, `DD/MM/YYYY`, `DD.MM.YYYY`
+- ✅ **Month Name Format**: `DD MMM YYYY`, `DD-MMM-YYYY` (e.g., "28 May 1986", "28-May-1986")
+- ✅ **Auto-Separator Detection**: Automatically detects `-`, `/`, `.`, or space separators
+- ✅ **Format Preservation**: Masked output uses the same separator as input
+- ✅ **Month Abbreviations**: Supports Jan-Dec (case-insensitive)
+- ✅ **Full Month Names**: January, February, March, etc.
+
+**Enhanced Masking Function:**
+- ✅ Smart format detection based on part lengths and content
+- ✅ Handles YYYY-MM-DD (year first) and DD-MM-YYYY (day first) formats
+- ✅ Special handling for month name formats
+- ✅ Preserves original separator in masked output
+
+**Supported Formats:**
+
+| **Format** | **Example** | **Masked (Partial)** | **Region** |
+|------------|-------------|----------------------|------------|
+| YYYY-MM-DD | `1986-05-28` | `1986-**-**` | ISO 8601, Asia |
+| YYYY/MM/DD | `1986/05/28` | `1986/**/**` | ISO, Japan |
+| DD-MM-YYYY | `28-05-1986` | `**-**-1986` | Europe, Australia |
+| DD/MM/YYYY | `28/05/1986` | `**/**/1986` | UK, Australia |
+| DD.MM.YYYY | `28.05.1986` | `**.**.1986` | Germany, Europe |
+| DD MMM YYYY | `28 May 1986` | `** *** 1986` | Readable format |
+| DD-MMM-YYYY | `28-May-1986` | `**-***-1986` | Database format |
+
+#### Improved
+
+**Detection Pattern (maskingEngine.ts:177):**
+```typescript
+// OLD: Only YYYY-MM-DD and YYYY/MM/DD
+dateOfBirth: /\b\d{4}[-/]\d{2}[-/]\d{2}\b/g
+
+// NEW: All international formats
+dateOfBirth: /\b(?:\d{4}[-/.]\d{2}[-/.]\d{2}|\d{2}[-/.]\d{2}[-/.]\d{4}|\d{2}[-/.\s](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-/.\s]\d{4})\b/gi
+```
+
+**Masking Function (maskingEngine.ts:746-821):**
+- Complete rewrite to support all formats
+- Auto-detects separator (-, /, ., space)
+- Identifies format (year first vs. day first)
+- Handles month names separately
+- Preserves input format in output
+
+#### Documentation
+
+**Updated Files:**
+- ✅ `GUIDE-DATA-MASKING.md`: Added international date format table and examples
+- ✅ `GUIDE-DATA-MASKING.md`: Added "How It Works" section for format detection
+- ✅ `GUIDE-DATA-MASKING.md`: Updated PII types table with multiple date format examples
+- ✅ `CHANGELOG.md`: Complete v1.4.4 release notes
+
+**Example Usage:**
+```json
+{
+  "dateOfBirth_iso": "1986-05-28",      → "1986-**-**"
+  "dateOfBirth_eu": "28/05/1986",       → "**/**/1986"
+  "dateOfBirth_de": "28.05.1986",       → "**.**.1986"
+  "dateOfBirth_readable": "28 May 1986" → "** *** 1986"
+}
+```
+
+#### Technical Details
+
+**Files Modified:**
+- `src/utils/maskingEngine.ts`:
+  - Line 177: Enhanced `dateOfBirth` regex pattern
+  - Lines 746-821: Completely rewrote `maskDateOfBirth()` function
+- `package.json`: Version 1.4.3 → 1.4.4
+- `GUIDE-DATA-MASKING.md`: Added international format section
+- `CHANGELOG.md`: Added v1.4.4 release notes
+
+**Backward Compatibility:**
+- ✅ Fully backward compatible with existing YYYY-MM-DD and YYYY/MM/DD formats
+- ✅ No configuration changes required
+- ✅ Works with all existing masking strategies (partial, full, structural)
+
+---
+
 ## [1.4.3] - 2025-11-20
 
 ### 🚀 Enhancement: Phase 1 Confidence Scoring Improvements

@@ -95,7 +95,7 @@ John Doe,j***@e***.com,0*** *** ***,***-*56,***321
 | **Email** | `john.doe@example.com` | `j***@e***.com` | Pattern + Column name |
 | **Phone** | `0412 345 678` | `0*** *** ***` | Pattern + Column name |
 | **Address** | `123 Main Street, Melbourne VIC 3000` | `[ADDRESS REDACTED]` | Column name only |
-| **Date of Birth** | `1986-05-28` | `1986-**-**` | Pattern (YYYY-MM-DD) + Context |
+| **Date of Birth** | `1986-05-28`<br>`28/05/1986`<br>`28.05.1986`<br>`28 May 1986` | `1986-**-**`<br>`**/**/1986`<br>`**.**.**1986`<br>`** *** 1986` | Pattern + Context<br>(All international formats) |
 
 **Column Patterns for Address:**
 - `address`, `street`, `addr`, `location`, `residence`, `mailing`
@@ -108,6 +108,40 @@ John Doe,j***@e***.com,0*** *** ***,***-*56,***321
 - Transaction dates (`transactionDate`, `effectiveDate`)
 - System dates (`createdDate`, `modifiedDate`, `paymentDate`)
 - 25+ other business date types
+
+**International Date Format Support (v1.4.4+):**
+
+The extension now supports **all major international date formats**:
+
+| **Format** | **Example** | **Masked (Partial)** | **Region** |
+|------------|-------------|----------------------|------------|
+| YYYY-MM-DD | `1986-05-28` | `1986-**-**` | ISO 8601, Asia |
+| YYYY/MM/DD | `1986/05/28` | `1986/**/**` | ISO, Japan |
+| DD-MM-YYYY | `28-05-1986` | `**-**-1986` | Europe, Australia |
+| DD/MM/YYYY | `28/05/1986` | `**/**/1986` | UK, Australia |
+| DD.MM.YYYY | `28.05.1986` | `**.**.1986` | Germany, Europe |
+| DD MMM YYYY | `28 May 1986` | `** *** 1986` | Readable format |
+| DD-MMM-YYYY | `28-May-1986` | `**-***-1986` | Common in databases |
+
+**Supported Month Abbreviations:**
+- Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+- Also supports full month names: January, February, etc.
+
+**How It Works:**
+1. **Auto-Detection**: Automatically detects separator (-, /, ., space)
+2. **Format Recognition**: Identifies year position (start vs. end)
+3. **Month Names**: Recognizes text month names in any case
+4. **Preserves Format**: Masking output uses the same separator as input
+
+**Example:**
+```json
+{
+  "dateOfBirth_iso": "1986-05-28",      → "1986-**-**"
+  "dateOfBirth_eu": "28/05/1986",       → "**/**/1986"
+  "dateOfBirth_de": "28.05.1986",       → "**.**.1986"
+  "dateOfBirth_readable": "28 May 1986" → "** *** 1986"
+}
+```
 
 ---
 
