@@ -2,6 +2,42 @@
 
 All notable changes to the "Copy Info with Context" extension will be documented in this file.
 
+## [1.4.2] - 2025-11-20
+
+### 🐛 Bug Fix: XML/JSON Values Not Being Masked
+
+**Fixed critical issue where PII values inside XML and JSON structures were not being masked.**
+
+#### Fixed
+
+**XML/JSON Structured Data Detection:**
+- ✅ Values inside XML tags now properly masked (e.g., `<dateOfBirth>1986-05-28</dateOfBirth>`)
+- ✅ Values inside JSON properties now properly masked (e.g., `"email": "user@example.com"`)
+- ✅ Confidence scoring now recognizes structured data patterns
+- ✅ Skips natural language heuristics for structured data (XML/JSON)
+
+**Root Cause:**
+The confidence scoring system was designed to avoid false positives in natural language text, but it incorrectly penalized values inside XML/JSON structures, causing valid PII to be skipped.
+
+**Solution:**
+Added early detection for XML/JSON structured data patterns. When a value is detected inside `<tag>VALUE</tag>` or `"field": VALUE` patterns, the confidence is boosted to 0.85 and natural language heuristics are skipped.
+
+**Example:**
+```xml
+Before: <lifeDateOfBirth>1986-05-28</lifeDateOfBirth>  ❌ Not masked
+After:  <lifeDateOfBirth>1986-**-**</lifeDateOfBirth>  ✅ Properly masked
+
+Before: <email>john@example.com</email>  ❌ Not masked
+After:  <email>j***@e***.com</email>  ✅ Properly masked
+```
+
+**Technical Details:**
+- Added `isInXmlValue` detection: `/<[^>]+>\s*$/` before + `/^\s*<\//` after
+- Added `isInJsonValue` detection: `/:\s*"?\s*$/` before
+- Returns confidence 0.85 immediately for structured data, bypassing other heuristics
+
+---
+
 ## [1.4.1] - 2025-11-17
 
 ### 🎯 Enhancement: Context-Aware Masking with Confidence Scoring

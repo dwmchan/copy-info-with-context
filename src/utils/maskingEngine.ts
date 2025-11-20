@@ -297,6 +297,17 @@ function calculateMaskingConfidence(
 
     let confidence = 0.5; // Start at neutral
 
+    // === XML/JSON STRUCTURED DATA BOOST ===
+    // If we're inside XML/JSON structure, trust the field name context and boost confidence
+    const isInXmlValue = /<[^>]+>\s*$/.test(contextBefore) && /^\s*<\//.test(immediateAfter);
+    const isInJsonValue = /:\s*"?\s*$/.test(contextBefore);
+
+    if (isInXmlValue || isInJsonValue) {
+        // High confidence for values in structured data - the field name is the context
+        confidence = 0.85;
+        return confidence; // Skip other heuristics for structured data
+    }
+
     // === FACTORS THAT INCREASE CONFIDENCE (should mask) ===
 
     // 1. Has a clear label pattern before it (e.g., "Reference:", "Ref #:", "Invoice No:")

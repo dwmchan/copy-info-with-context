@@ -616,6 +616,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### [1.4.2] - 2025-11-20
+
+#### 🐛 Bug Fix: XML/JSON Values Not Being Masked
+
+**Fixed:**
+- ✅ Values inside XML tags now properly masked (e.g., `<dateOfBirth>1986-05-28</dateOfBirth>`)
+- ✅ Values inside JSON properties now properly masked
+- ✅ Confidence scoring now recognizes structured data patterns
+
+---
+
 ### [1.4.0] - 2025-11-17
 
 #### 🎉 Major Feature: Smart Data Masking (Phase 1)
@@ -624,19 +635,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Automatic detection and masking of 25+ PII types
 - ✅ 5 industry presets: None, Basic, Financial, Healthcare, Enterprise, Custom
 - ✅ 4 masking strategies: Partial, Full, Structural, Hash (future)
-- ✅ Support for email, phone, DOB, credit cards, bank accounts, passports, driver's licenses, and more
-- ✅ Australian banking: BSB, TFN, ABN, Medicare
-- ✅ International banking: IBAN, SWIFT/BIC, routing numbers
-- ✅ Identity documents: Passports, licenses, national IDs (AU/US/UK/EU)
-- ✅ Smart detection: Pattern-based + column name recognition + context-aware exclusions
-- ✅ Field name protection: Never masks XML/JSON tag names, only values
-- ✅ Date intelligence: Distinguishes birth dates from service/transaction dates (25 exclusion keywords)
+- ✅ Smart detection with field name protection and date intelligence
 - ✅ 100% local processing - GDPR/CCPA/HIPAA compliant
 - ✅ Comprehensive guides: [Data Masking Guide](GUIDE-DATA-MASKING.md) and [CSV Intelligence Guide](GUIDE-CSV-INTELLIGENCE.md)
-
-**Fixed:**
-- ✅ XML/JSON tag names no longer masked (e.g., `<transactionDate>` preserved)
-- ✅ Service dates excluded from birth date masking
 
 **Note:** Data masking is **disabled by default** and must be enabled manually.
 
