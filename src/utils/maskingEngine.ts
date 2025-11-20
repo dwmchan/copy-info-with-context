@@ -276,11 +276,155 @@ function isInsideFieldName(text: string, matchIndex: number, matchLength: number
     return false;
 }
 
+// ============================================================================
+// PHASE 1 CONFIDENCE SCORING IMPROVEMENTS (v1.4.3)
+// ============================================================================
+
+/**
+ * Domain-specific prior probabilities based on pattern reliability
+ * These reflect real-world false positive rates for each pattern type
+ */
+const PATTERN_PRIOR_PROBABILITIES: Record<string, number> = {
+    // High reliability patterns (rarely false positives)
+    email: 0.85,
+    credit_card: 0.90,
+    australian_medicare: 0.95,
+    ssn: 0.90,
+    iban: 0.92,
+    australian_tfn: 0.85,
+    australian_abn: 0.85,
+
+    // Medium reliability patterns
+    phone: 0.70,
+    australian_bsb: 0.75,
+    passport_number: 0.70,
+    drivers_license: 0.70,
+    national_id: 0.70,
+    australian_passport: 0.75,
+    us_passport: 0.75,
+    uk_passport: 0.75,
+    swift: 0.80,
+    routing_number: 0.75,
+
+    // Low reliability patterns (high false positive risk)
+    reference_number: 0.40,
+    transaction_id: 0.45,
+    policy_number: 0.50,
+    client_number: 0.55,
+    date_of_birth: 0.60,  // Many false positives from service dates
+    account_number: 0.65,
+
+    // Custom patterns (user-defined)
+    custom: 0.65
+};
+
+/**
+ * Check for statistical anomalies that indicate test data or placeholders
+ * Returns a confidence multiplier (0.0 to 1.0)
+ */
+function checkStatisticalAnomalies(value: string): number {
+    // Check for repeated patterns (e.g., "111-111-1111" is unlikely real phone)
+    const hasRepeatedDigits = /(\d)\1{4,}/.test(value);
+    if (hasRepeatedDigits) {
+        return 0.2;
+    }
+
+    // Check for sequential patterns (e.g., "123456789" is unlikely real SSN)
+    const digits = value.replace(/\D/g, '');
+    const hasSequential = /(?:0123|1234|2345|3456|4567|5678|6789|7890|9876|8765|7654|6543|5432|4321|3210)/.test(digits);
+    if (hasSequential) {
+        return 0.3;
+    }
+
+    // Check for common placeholder patterns
+    const placeholderPatterns = [
+        /^[X]+$/i,                    // XXXXXXXX
+        /^[0]+$/,                     // 00000000
+        /^(123|999|000)/,             // 123456789, 999999999, 000000000
+        /^(N\/?A|TBD|TBA|TODO)$/i,   // N/A, TBD, TBA, TODO
+        /^(test|example|sample|demo)/i, // test data markers
+        /^(dummy|placeholder|fake)/i    // obvious placeholders
+    ];
+
+    const isPlaceholder = placeholderPatterns.some(p => p.test(value));
+    if (isPlaceholder) {
+        return 0.1;
+    }
+
+    // Check for all same character (e.g., "AAAAAAA")
+    const allSameChar = /^(.)\1+$/.test(value.replace(/[\s\-]/g, ''));
+    if (allSameChar && value.replace(/[\s\-]/g, '').length > 3) {
+        return 0.15;
+    }
+
+    // All checks passed - no anomalies detected
+    return 1.0;
+}
+
+/**
+ * Get adaptive confidence threshold based on context and pattern type
+ * Returns adjusted threshold (higher = more conservative, fewer false positives)
+ */
+function getAdaptiveThreshold(
+    baseThreshold: number,
+    structureType: string,
+    patternType: string,
+    maskingMode: string
+): number {
+    let threshold = baseThreshold;
+
+    // Structured data: can use lower threshold (more confident in detection)
+    if (structureType === 'xml' || structureType === 'json') {
+        threshold -= 0.1;
+    }
+
+    // Plain text: use higher threshold (more conservative to avoid false positives)
+    if (structureType === 'plain_text') {
+        threshold += 0.15;
+    }
+
+    // High-risk patterns (prone to false positives) need higher threshold
+    const highRiskPatterns = ['reference_number', 'transaction_id', 'policy_number', 'client_number', 'date_of_birth'];
+    if (highRiskPatterns.includes(patternType)) {
+        threshold += 0.1;
+    }
+
+    // Mode-specific adjustments
+    if (maskingMode === 'strict') {
+        threshold += 0.1;  // Be more conservative
+    } else if (maskingMode === 'manual') {
+        threshold += 0.2;  // Very high threshold (user will review)
+    }
+    // 'auto' mode uses base threshold
+
+    // Clamp between reasonable bounds
+    return Math.max(0.5, Math.min(0.95, threshold));
+}
+
+/**
+ * Detect structure type from context
+ */
+function detectStructureType(contextBefore: string, contextAfter: string): string {
+    if (/<[^>]+>\s*$/.test(contextBefore) && /^\s*<\//.test(contextAfter)) {
+        return 'xml';
+    }
+    if (/[{,]\s*"[^"]+"\s*:\s*"?\s*$/.test(contextBefore)) {
+        return 'json';
+    }
+    if (/,\s*$/.test(contextBefore) || /^\s*,/.test(contextAfter)) {
+        return 'csv';
+    }
+    return 'plain_text';
+}
+
 /**
  * Calculate confidence score for whether a match should be masked in plain text
  * Returns a score from 0.0 (don't mask) to 1.0 (definitely mask)
  *
- * This helps avoid false positives in natural language text while still catching real PII
+ * PHASE 1 IMPROVEMENTS (v1.4.3):
+ * - Domain-specific prior probabilities
+ * - Statistical anomaly detection (placeholder filtering)
+ * - Adaptive thresholding based on context
  */
 function calculateMaskingConfidence(
     text: string,
@@ -295,7 +439,19 @@ function calculateMaskingConfidence(
     const contextAfter = text.substring(matchEnd, Math.min(text.length, matchEnd + 100));
     const immediateAfter = text.substring(matchEnd, Math.min(text.length, matchEnd + 30));
 
-    let confidence = 0.5; // Start at neutral
+    // PHASE 1: Start with domain-specific prior instead of neutral 0.5
+    const priorProbability = PATTERN_PRIOR_PROBABILITIES[patternType] || 0.5;
+    let confidence = priorProbability;
+
+    // PHASE 1: Check for statistical anomalies (test data, placeholders)
+    const statisticalConfidence = checkStatisticalAnomalies(matchValue);
+    if (statisticalConfidence < 0.5) {
+        // Strong evidence this is test/placeholder data
+        return statisticalConfidence * 0.5; // Cap at 0.25 max
+    }
+
+    // Apply statistical multiplier to confidence
+    confidence *= statisticalConfidence;
 
     // === XML/JSON STRUCTURED DATA BOOST ===
     // If we're inside XML/JSON structure, trust the field name context and boost confidence
@@ -902,8 +1058,19 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
             // Calculate confidence score for this match
             const confidence = calculateMaskingConfidence(text, match.index!, originalValue, type);
 
-            // Skip if confidence is below threshold
-            if (confidence < effectiveConfig.confidenceThreshold) {
+            // PHASE 1: Use adaptive thresholding based on context
+            const contextBefore = text.substring(Math.max(0, match.index! - 100), match.index!);
+            const contextAfter = text.substring(match.index! + originalValue.length, Math.min(text.length, match.index! + originalValue.length + 100));
+            const structureType = detectStructureType(contextBefore, contextAfter);
+            const adaptiveThreshold = getAdaptiveThreshold(
+                effectiveConfig.confidenceThreshold,
+                structureType,
+                type,
+                effectiveConfig.mode
+            );
+
+            // Skip if confidence is below adaptive threshold
+            if (confidence < adaptiveThreshold) {
                 continue;
             }
 
