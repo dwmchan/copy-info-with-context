@@ -954,21 +954,28 @@ API_KEY=sk_example_####################
    - Validates matches (e.g., Luhn algorithm for credit cards)
    - Records match position and type
 
-4. **Context Analysis**
+4. **Statistical Anomaly Detection (v1.4.3+)**
+   - **Test Data Detection**: Checks for repeated digits (e.g., `111-11-1111`)
+   - **Sequential Patterns**: Identifies sequential numbers (e.g., `123-45-6789`, `987-65-4321`)
+   - **Placeholder Patterns**: Detects `XXXXXXXX`, `00000000`, `N/A`, `TBD`, `test@example.com`
+   - **Same Character**: Flags values like `AAAAAAA` or `9999999`
+   - Skips masking if value appears to be test/placeholder data
+
+5. **Context Analysis**
    - **Field Name Protection**: Checks if match is inside an XML/JSON field name
    - **Date Exclusion**: For date of birth, checks if in a service date field
    - Skips matches that are tag names or excluded contexts
 
-5. **Column Type Matching**
+6. **Column Type Matching**
    - For CSV/structured data, maps columns to PII types
    - Applies column-specific masking (e.g., "Email" column → email masking)
 
-6. **Masking Application**
+7. **Masking Application**
    - Applies selected strategy (partial/full/structural)
    - Replaces sensitive values with masked versions
    - Preserves formatting and structure
 
-7. **Output Generation**
+8. **Output Generation**
    - Combines masked data with context headers
    - Adds statistics if enabled
    - Copies to clipboard
@@ -1024,6 +1031,82 @@ API_KEY=sk_example_####################
 <eligibleServiceDate>2012-06-15</eligibleServiceDate>  ← NOT masked ("eligible" in context)
 <lifeDateOfBirth>1986-05-28</lifeDateOfBirth>          ← IS masked ("birth" in context)
 ```
+
+---
+
+### Statistical Anomaly Detection
+
+**Added in v1.4.3** - Automatically detects and skips test/placeholder data to reduce false positives.
+
+**Why This Matters:**
+- Prevents masking example data in documentation
+- Avoids false positives in test files with synthetic data
+- Preserves placeholder markers like "N/A", "TBD" in your code
+
+**Detection Rules:**
+
+| **Anomaly Type** | **Pattern** | **Examples** | **Confidence Multiplier** |
+|------------------|-------------|--------------|---------------------------|
+| **Repeated Digits** | 5+ consecutive same digit | `111-11-1111`, `555-555-5555` | 0.2 (likely not masked) |
+| **Sequential Numbers** | 4+ sequential digits | `123-45-6789`, `987-65-4321` | 0.3 (likely not masked) |
+| **Common Placeholders** | Known test patterns | `XXXXXXXX`, `00000000`, `test@example.com` | 0.1 (won't mask) |
+| **All Same Character** | Same character repeated 4+ times | `AAAAAAA`, `9999999` | 0.15 (likely not masked) |
+
+**How It Works:**
+
+1. After a pattern match is found (e.g., TFN regex matches `"987 654 321"`)
+2. The value is analyzed for statistical anomalies
+3. If anomalies detected, confidence score is drastically reduced
+4. If score falls below threshold (default 0.7), masking is skipped
+
+**Example: TFN with Sequential Pattern**
+
+```json
+{
+  "tfn": "987 654 321"
+}
+```
+
+**Analysis:**
+- ✅ Matches TFN pattern: `/\b\d{3}\s?\d{3}\s?\d{3}\b/g`
+- ❌ Contains sequential digits: "987" and "654"
+- 📊 Statistical confidence: 0.3 (below threshold)
+- 🚫 **Result:** NOT masked
+
+**Example: Random-Looking TFN**
+
+```json
+{
+  "tfn": "123 456 782"
+}
+```
+
+**Analysis:**
+- ✅ Matches TFN pattern
+- ✅ No obvious sequential patterns ("782" is not sequential)
+- 📊 Statistical confidence: 1.0 (no anomalies)
+- ✅ **Result:** IS masked → `***`
+
+**Overriding Detection:**
+
+If you need to mask test data (e.g., for compliance training), use the deny-list:
+
+```json
+{
+  "copyInfoWithContext.maskingDenyList": ["tfn", "ssn", "creditCard"]
+}
+```
+
+This forces masking regardless of statistical checks.
+
+**Future Improvements (Phase 2):**
+
+In v1.5.0, checksum validation will be added:
+- **TFN**: Mod-11 checksum algorithm
+- **ABN**: Mod-89 checksum algorithm
+- **Credit Cards**: Luhn algorithm
+
+This will better distinguish real vs. test data (e.g., `"987 654 321"` might actually be a valid TFN if checksum passes).
 
 ---
 
@@ -1131,7 +1214,73 @@ API_KEY=sk_example_####################
 
 ---
 
-### Issue 4: XML Tag Names Being Masked
+### Issue 4: Test Data or Sequential Patterns Not Being Masked
+
+**Symptom:** Data that looks like PII is not being masked (e.g., TFN `"987 654 321"`, SSN `"123-45-6789"`)
+
+**Reason:** This is **intentional** - the extension includes intelligent test data detection to avoid masking placeholder/test values.
+
+**Statistical Anomaly Detection (v1.4.3+):**
+
+The masking engine automatically **skips** values that appear to be test/placeholder data:
+
+| **Pattern Type** | **Example Value** | **Detection** | **Action** |
+|------------------|-------------------|---------------|------------|
+| **Repeated Digits** | `111-11-1111` | 5+ consecutive same digits | Not masked |
+| **Sequential Numbers** | `123-45-6789`, `987-65-4321` | 4+ sequential digits | Not masked |
+| **Common Placeholders** | `XXXXXXXX`, `00000000` | All X's or zeros | Not masked |
+| **Test Markers** | `test@example.com`, `N/A`, `TBD` | Known test patterns | Not masked |
+| **All Same Character** | `AAAAAAA`, `9999999` | Same character repeated | Not masked |
+
+**Why This Matters:**
+
+1. **Documentation & Examples**: Prevents masking example data in API docs, README files, code comments
+2. **Test Files**: Avoids false positives in unit tests with synthetic data
+3. **Placeholders**: Preserves "TBD", "N/A", "TODO" markers in your code
+
+**Example Scenarios:**
+
+```json
+// Scenario 1: Real TFN with sequential digits
+{
+  "tfn": "987 654 321"  ← Contains "987" and "654" sequences → NOT masked
+}
+
+// Scenario 2: Test SSN
+{
+  "ssn": "123-45-6789"  ← Sequential pattern → NOT masked
+}
+
+// Scenario 3: Repeated pattern
+{
+  "phone": "555-555-5555"  ← Repeated "555" → NOT masked
+}
+
+// Scenario 4: Real-looking data (no anomalies)
+{
+  "tfn": "123 456 782",  ← No obvious patterns → IS masked
+  "ssn": "234-56-7890",  ← Random digits → IS masked
+  "phone": "0412 345 678" ← Normal pattern → IS masked
+}
+```
+
+**If You Need to Mask Test Data:**
+
+Use the **deny-list** to force masking:
+
+```json
+{
+  "copyInfoWithContext.maskingDenyList": ["tfn", "ssn", "phone"]
+}
+```
+
+This overrides statistical checks and **always** masks those columns.
+
+**Note:** In Phase 2 (v1.5.0+), checksum validation will be added for TFN, ABN, and credit cards to better distinguish real vs. test data.
+
+---
+
+### Issue 5: XML Tag Names Being Masked
 
 **Symptom:** Tag names like `<transactionDate>` become `<t***e>`
 

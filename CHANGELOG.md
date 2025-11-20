@@ -72,8 +72,15 @@ All notable changes to the "Copy Info with Context" extension will be documented
 - ✅ Additional filtering happens automatically
 
 **Documentation:**
-- Complete Phase 2 and Phase 3 roadmap documented in CLAUDE.md
-- Future enhancements: Format validation (Luhn, TFN checksums), Bayesian scoring, ensemble approach
+- ✅ Added comprehensive "Statistical Anomaly Detection" section to GUIDE-DATA-MASKING.md
+- ✅ Added "Issue 4: Test Data or Sequential Patterns Not Being Masked" troubleshooting guide
+- ✅ Documented all detection rules with examples and confidence multipliers
+- ✅ Explained why TFN `"987 654 321"` is not masked (sequential pattern detection)
+- ✅ Provided deny-list override instructions for forcing test data masking
+- ✅ Updated "How It Works" pipeline with statistical anomaly detection step
+- ✅ Updated README.md with v1.4.3 feature highlights
+- ✅ Complete Phase 2 and Phase 3 roadmap documented in CLAUDE.md
+- ✅ Future enhancements: Format validation (Luhn, TFN checksums), Bayesian scoring, ensemble approach
 
 ---
 

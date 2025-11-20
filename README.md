@@ -236,16 +236,17 @@ Customize the extension through VS Code Settings (`Ctrl+,`):
 
 ## Key Features in Latest Version
 
-### 🎯 NEW in v1.4.1: Context-Aware Masking with Confidence Scoring
+### 🎯 NEW in v1.4.3: Context-Aware Masking with Confidence Scoring
 
-**Intelligent masking that understands context!** Eliminates false positives by analyzing surrounding text.
+**Intelligent masking that understands context!** Eliminates false positives by analyzing surrounding text and detecting test data.
 
 **What's New:**
 - ✅ **Confidence Scoring Algorithm**: Calculates 0.0-1.0 confidence for each match before masking
 - ✅ **Context Analysis**: Analyzes 100 characters before/after to understand intent
+- ✅ **Statistical Anomaly Detection**: Automatically skips test/placeholder data (e.g., `111-11-1111`, `123-45-6789`, `test@example.com`)
 - ✅ **Smart Detection**: Distinguishes "Reference: ABC123" (mask) from "Payment Info Reference [10]" (don't mask)
 - ✅ **Configurable Threshold**: `maskingConfidenceThreshold` (default: 0.7) - adjust sensitivity
-- ✅ **No More False Positives**: Natural language and ticket descriptions preserved
+- ✅ **No More False Positives**: Natural language, ticket descriptions, and test data preserved
 
 **Example:**
 ```
