@@ -4,3 +4,4 @@ claude.md
 out
 test-data-masking
 .claude/
+claude*.md
