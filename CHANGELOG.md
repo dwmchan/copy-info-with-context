@@ -2,6 +2,52 @@
 
 All notable changes to the "Copy Info with Context" extension will be documented in this file.
 
+## [1.5.1] - 2025-11-21
+
+### 🐛 Critical Bug Fix: XML/JSON Field Name Masking
+
+**Fixed:** XML and JSON field names (tags/keys) were being incorrectly masked along with values
+
+#### Problem
+The masking engine was using **global text replacement** which replaced patterns anywhere they appeared in the text, including in XML tag names and JSON field names. For example:
+
+```xml
+<!-- Before fix (WRONG) -->
+<ConsumerNo>87392713001</ConsumerNo>   → <Consumer***o>***001</Consumer***o>
+<AccountNo>462948001</AccountNo>       → <Account***o>***001</Account***o>
+<NMI>462948001</NMI>                   → <***MI>***001</***MI>
+
+<!-- After fix (CORRECT) -->
+<ConsumerNo>87392713001</ConsumerNo>   → <ConsumerNo>***001</ConsumerNo>
+<AccountNo>462948001</AccountNo>       → <AccountNo>***001</AccountNo>
+<NMI>462948001</NMI>                   → <NMI>***001</NMI>
+```
+
+The pattern would match "No" or "MI" as part of a detected value somewhere in the document, then the `split().join()` replacement would change ALL instances of those strings, including within tag/field names.
+
+#### Solution
+Implemented **position-based replacement** instead of global string replacement:
+
+1. **Track exact positions**: Store the index and length of each detected PII match
+2. **Sort by position**: Apply replacements in reverse order (highest index first) to preserve positions
+3. **Replace only at matched positions**: Only replace the specific substring at the detected index
+
+**Code Changes:**
+- Added `positionReplacements` array to track `{index, length, maskedValue}` for each match
+- Modified all detection sections (field-based, pattern-based, custom) to add to `positionReplacements`
+- Replaced global `split().join()` logic with position-specific substring replacement
+
+**Benefits:**
+- ✅ Field/tag names are never masked (only values)
+- ✅ Works for XML, JSON, and all structured formats
+- ✅ No more "whack-a-mole" with regex patterns
+- ✅ Surgical precision - only masks detected PII at exact positions
+
+**Files Modified:**
+- `src/utils/maskingEngine.ts` - Position-based replacement implementation
+
+---
+
 ## [1.5.0] - 2025-11-21
 
 ### 🎯 Major Enhancement: Hybrid Date of Birth Detection

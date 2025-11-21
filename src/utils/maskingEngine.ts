@@ -1171,6 +1171,14 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
     const detections: Detection[] = [];
     const replacements: Map<string, string> = new Map();
 
+    // Track position-specific replacements to avoid masking field names
+    interface PositionReplacement {
+        index: number;
+        length: number;
+        maskedValue: string;
+    }
+    const positionReplacements: PositionReplacement[] = [];
+
     // Map specific pattern types to their general configuration category
     const typeMapping: Record<string, string> = {
         'creditCardVisa': 'creditCard',
@@ -1248,8 +1256,13 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                         confidence: 0.95  // High confidence for field-name-based detection
                     });
 
-                    // Store replacement
+                    // Store replacement (both map and position-specific)
                     replacements.set(value, maskedValue);
+                    positionReplacements.push({
+                        index: valueIndex,
+                        length: value.length,
+                        maskedValue
+                    });
                 }
             }
         }
@@ -1326,8 +1339,13 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                 confidence
             });
 
-            // Store replacement
+            // Store replacement (both map and position-specific)
             replacements.set(originalValue, maskedValue);
+            positionReplacements.push({
+                index: match.index!,
+                length: originalValue.length,
+                maskedValue
+            });
         }
     }
 
@@ -1364,18 +1382,26 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                 confidence: 1.0
             });
 
-            // Store replacement
+            // Store replacement (both map and position-specific)
             replacements.set(originalValue, maskedValue);
+            positionReplacements.push({
+                index: match.index!,
+                length: originalValue.length,
+                maskedValue
+            });
         }
     }
 
-    // Apply all replacements at once (sorted by length descending to avoid partial replacements)
-    let maskedText = text;
-    const sortedReplacements = Array.from(replacements.entries())
-        .sort((a, b) => b[0].length - a[0].length);
+    // Apply position-based replacements (not global string replacement)
+    // This prevents masking field names when the same text appears in XML/JSON tags
+    // Sort by index in descending order (highest first) to preserve positions
+    const sortedPositionReplacements = positionReplacements.sort((a, b) => b.index - a.index);
 
-    for (const [original, masked] of sortedReplacements) {
-        maskedText = maskedText.split(original).join(masked);
+    let maskedText = text;
+    for (const replacement of sortedPositionReplacements) {
+        const before = maskedText.substring(0, replacement.index);
+        const after = maskedText.substring(replacement.index + replacement.length);
+        maskedText = before + replacement.maskedValue + after;
     }
 
     return {
