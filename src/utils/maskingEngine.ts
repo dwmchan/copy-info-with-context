@@ -575,26 +575,101 @@ function calculateMaskingConfidence(
     return Math.max(0, Math.min(1, confidence));
 }
 
+// ============================================================================
+// PHASE 2 (v1.5.0): HYBRID DATE OF BIRTH DETECTION
+// Replaces keyword exclusion with positive matching + age validation
+// ============================================================================
+
 /**
- * Check if a date match should be excluded because it's in a non-birth-date field
- * Returns true if the date appears to be a service/business date, not a birth date
+ * Check if the field name suggests this is a birth date field
+ * Uses positive matching - only returns true if birth-related keywords are present
  */
-function isNonBirthDateField(text: string, matchIndex: number): boolean {
-    // Keywords that indicate this is NOT a birth date
-    const exclusionKeywords = [
-        'eligible', 'service', 'start', 'end', 'expiry', 'expire', 'effective', 'transaction',
-        'created', 'modified', 'updated', 'deleted', 'issued', 'commence', 'completion',
-        'payment', 'settlement', 'process', 'registration', 'enrollment', 'join', 'leave',
-        'termination', 'cancellation', 'renewal', 'anniversary', 'due', 'maturity',
-        'valuation', 'assessment', 'review', 'audit', 'report', 'statement', 'financial'
+function isBirthDateField(text: string, matchIndex: number): boolean {
+    // Keywords that positively identify birth date fields
+    const birthKeywords = [
+        'birth', 'dob', 'dateofbirth', 'born', 'bday', 'birthday'
     ];
 
     // Look at context before the match (100 chars to capture field name)
     const contextStart = Math.max(0, matchIndex - 100);
     const contextBefore = text.substring(contextStart, matchIndex).toLowerCase();
 
-    // Check if any exclusion keyword appears in the context
-    return exclusionKeywords.some(keyword => contextBefore.includes(keyword));
+    // Only return true if birth-related keyword is found
+    return birthKeywords.some(keyword => contextBefore.includes(keyword));
+}
+
+/**
+ * Validate if a date represents a plausible human birth date
+ * Checks for valid calendar date and reasonable age range (18-120 years)
+ */
+function isPlausibleBirthDate(dateStr: string): boolean {
+    try {
+        // Parse date components
+        const parts = dateStr.split(/[-/]/);
+        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return false;
+
+        let year: number, month: number, day: number;
+
+        // Detect format: YYYY-MM-DD or DD-MM-YYYY
+        if (parts[0].length === 4) {
+            // YYYY-MM-DD format
+            const parsedYear = parseInt(parts[0], 10);
+            const parsedMonth = parseInt(parts[1], 10);
+            const parsedDay = parseInt(parts[2], 10);
+
+            if (isNaN(parsedYear) || isNaN(parsedMonth) || isNaN(parsedDay)) return false;
+
+            year = parsedYear;
+            month = parsedMonth;
+            day = parsedDay;
+        } else if (parts[2].length === 4) {
+            // DD-MM-YYYY format
+            const parsedDay = parseInt(parts[0], 10);
+            const parsedMonth = parseInt(parts[1], 10);
+            const parsedYear = parseInt(parts[2], 10);
+
+            if (isNaN(parsedYear) || isNaN(parsedMonth) || isNaN(parsedDay)) return false;
+
+            day = parsedDay;
+            month = parsedMonth;
+            year = parsedYear;
+        } else {
+            return false; // Unknown format
+        }
+
+        // Validate calendar date
+        const date = new Date(year, month - 1, day);
+        if (date.getFullYear() !== year ||
+            date.getMonth() + 1 !== month ||
+            date.getDate() !== day) {
+            return false; // Invalid calendar date (e.g., Feb 30)
+        }
+
+        // Check age range (18-120 years old from today)
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - year;
+
+        // Must be between 18 and 120 years old
+        return age >= 18 && age <= 120;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * HYBRID APPROACH: Determine if a date should be masked as a birth date
+ * Combines positive field name matching with age validation
+ * Both conditions must be true to mask the date
+ */
+function shouldMaskAsDateOfBirth(text: string, matchIndex: number, dateValue: string): boolean {
+    // Step 1: Check if field name suggests birth date
+    const hasBirthKeyword = isBirthDateField(text, matchIndex);
+
+    // Step 2: Check if date is plausible birth date (valid age range)
+    const isPlausibleAge = isPlausibleBirthDate(dateValue);
+
+    // Only mask if BOTH conditions are true
+    return hasBirthKeyword && isPlausibleAge;
 }
 
 const SENSITIVE_COLUMN_PATTERNS: Record<string, string[]> = {
@@ -1208,8 +1283,9 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                 continue;
             }
 
-            // Special handling for dateOfBirth: skip if it's in a non-birth-date field
-            if (type === 'dateOfBirth' && isNonBirthDateField(text, match.index!)) {
+            // PHASE 2 (v1.5.0): Hybrid date of birth validation
+            // Only mask dates that have birth keywords AND plausible age
+            if (type === 'dateOfBirth' && !shouldMaskAsDateOfBirth(text, match.index!, originalValue)) {
                 continue;
             }
 
