@@ -57,15 +57,12 @@ import {
     detectColumnType,
     detectHeaders,
     buildAsciiTable,
-    getSensitiveColumnPatterns,
-
-    //UI functions
-    updateMaskingStatusBar,
-    showMaskingNotification
+    getSensitiveColumnPatterns
+    // remove UI functions from imports
 } from './masking';
 
 // Re-export types for backward compatibility
-export { PiiType, MaskingStrategy, Detection, MaskedResult, CustomPattern, MaskingConfig, getMaskingConfig, updateMaskingStatusBar, showMaskingNotification };
+export { PiiType, MaskingStrategy, Detection, MaskedResult, CustomPattern, MaskingConfig, getMaskingConfig };
 
 // ============================================================================
 // PRESET CONFIGURATIONS
@@ -183,6 +180,61 @@ const MASKING_FUNCTIONS: Record<string, (value: string, strategy: string) => str
     routingNumber: maskGeneric,
     custom: maskGeneric
 };
+
+// ============================================================================
+// STATUS BAR INDICATOR
+// ============================================================================
+
+let maskingStatusBarItem: vscode.StatusBarItem | undefined;
+
+export function updateMaskingStatusBar(result: MaskedResult, config: MaskingConfig): void {
+    if (!config.showIndicator) return;
+
+    if (!maskingStatusBarItem) {
+        maskingStatusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            100
+        );
+    }
+
+    if (config.enabled) {
+        if (result.detections.length > 0) {
+            maskingStatusBarItem.text = `$(shield) ${result.detections.length} masked`;
+            maskingStatusBarItem.tooltip = `Data masking active: ${result.detections.length} items masked`;
+            maskingStatusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        } else {
+            maskingStatusBarItem.text = '$(shield) Masking Active';
+            maskingStatusBarItem.tooltip = 'Data masking enabled (no sensitive data detected)';
+            maskingStatusBarItem.backgroundColor = undefined;
+        }
+        maskingStatusBarItem.show();
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => maskingStatusBarItem?.hide(), 5000);
+    }
+}
+
+export function showMaskingNotification(result: MaskedResult, config: MaskingConfig): void {
+    if (result.detections.length === 0) return;
+
+    const byType = result.detections.reduce((acc, d) => {
+        acc[d.type] = (acc[d.type] || 0) + 1;
+        return acc;
+    }, {} as Record<PiiType, number>);
+
+    const details = Object.entries(byType)
+        .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+        .join(', ');
+
+    vscode.window.showInformationMessage(
+        `Copied with ${result.detections.length} item${result.detections.length > 1 ? 's' : ''} masked: ${details}`,
+        'Settings'
+    ).then(selection => {
+        if (selection === 'Settings') {
+            vscode.commands.executeCommand('workbench.action.openSettings', 'copyInfoWithContext.masking');
+        }
+    });
+}
 
 // ============================================================================
 // MAIN MASKING ENGINE
