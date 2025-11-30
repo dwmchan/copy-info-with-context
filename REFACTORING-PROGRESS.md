@@ -143,7 +143,7 @@ Break down the monolithic `maskingEngine.ts` file (1739 lines) into smaller, foc
 ---
 
 ### ✅ Task 7: Central Export Module (`index.ts`)
-**Created:** Nov 25, 2025 (current session)
+**Created:** Nov 25, 2025
 **Size:** ~2 KB
 **Lines:** ~72
 
@@ -163,46 +163,83 @@ Break down the monolithic `maskingEngine.ts` file (1739 lines) into smaller, foc
 
 ---
 
+### ✅ Task 8: CSV Utilities Module (`csvHelpers.ts`)
+**Created:** Nov 25, 2025
+**Size:** 482 lines
+**Status:** ✅ COMPLETE (125% over-delivery)
+
+**Functions Implemented:**
+
+**Planned Functions (4):**
+- `detectDelimiter()` - Auto-detect CSV delimiter with variance-based analysis
+- `parseCsvLine()` - Parse CSV line with quote handling (both single/double quotes)
+- `shouldMaskColumn()` - Column masking decision with deny-list/allow-list support
+- `detectColumnType()` - Column type detection with fuzzy matching
+
+**Bonus Functions (5):**
+- `detectHeaders()` - Heuristic header detection based on numeric vs. text content
+- `getColumnRangeFromSelection()` - Maps character positions to column indices
+- `buildAsciiTable()` - ASCII table rendering with Unicode box-drawing characters
+- `detectColumnAlignments()` - Smart alignment (numeric right, boolean center, text left)
+- `getSensitiveColumnPatterns()` - Export sensitive column patterns for external use
+
+**Key Features:**
+- 20+ sensitive column pattern categories (email, address, phone, banking, identity docs)
+- Support for 5 delimiters: comma, tab, pipe, semicolon, colon
+- Quote-aware parsing (handles escaped quotes, mixed quotes)
+- Deny-list priority system: deny-list → allow-list → built-in patterns
+- Minimum column width enforcement (3 chars)
+
+**Target file:** `src/utils/masking/csvHelpers.ts`
+
+---
+
 ## Remaining Work
 
-### 🔄 Task 8: CSV Utilities Module (Planned)
-**Estimated:** ~400 lines
+### 🔄 Task 9: Main Engine Refactor (In Progress)
+**Current Status:** 660 lines (reduced from 1739)
+**Reduction Achieved:** 1079 lines extracted (62% reduction)
+**Target:** <400 lines (realistic target: ~544 lines)
 
-**Functions to extract:**
-- `detectDelimiter()` - Auto-detect CSV delimiter
-- `parseCsvLine()` - Parse CSV line with quote handling
-- `shouldMaskColumn()` - Column masking decision
-- `detectColumnType()` - Column type detection
-- `parseCsvLine()` - CSV parsing utilities
+**Current Breakdown:**
+- Lines 1-64: Modular imports (64 lines) - ❌ Cannot extract
+- Lines 66-133: Preset configurations (68 lines) - ⚠️ Could extract to config.ts
+- Lines 135-181: MASKING_FUNCTIONS map (47 lines) - ❌ Essential orchestration
+- Lines 187-440: maskText() function (254 lines) - ❌ Core orchestration
+- Lines 446-524: maskCsvText() function (79 lines) - ❌ Core orchestration
+- Lines 531-580: Helper functions (50 lines) - ❌ Needed for orchestration
+- **Lines 588-635: UI functions (48 lines) - ✅ CAN EXTRACT (Task 10)**
+- Lines 641-661: Utility functions (21 lines) - ❌ Needed
 
-**Target file:** `utils/masking/csvHelpers.ts`
+**Remaining Actions:**
+- ✅ Update imports to use modular exports (COMPLETE)
+- ⏳ Extract UI functions to ui.ts (Task 10) - saves 48 lines → 612 lines
+- ⏳ Consider extracting presets to config.ts - saves 68 lines → 544 lines
+- ⏳ Verify compilation (zero errors expected)
+- ⏳ Run existing tests to ensure no regressions
+
+**Realistic Assessment:**
+- Core orchestration (maskText, maskCsvText, MASKING_FUNCTIONS map) requires minimum ~459 lines
+- After all planned extractions: ~544 lines (still 144 lines over <400 target)
+- **Recommendation:** Revise target to <600 lines for realistic core orchestration
 
 ---
 
-### 🔄 Task 9: Main Engine Refactor (Planned)
-**Estimated:** ~300 lines remaining
-
-**Remaining in maskingEngine.ts:**
-- `maskText()` - Main text masking engine
-- `maskCsvText()` - CSV-specific masking engine
-- MASKING_FUNCTIONS map registration
-- SENSITIVE_COLUMN_PATTERNS definitions
-
-**Actions:**
-- Update imports to use modular exports
-- Remove extracted code
-- Keep only orchestration logic
-
----
-
-### 🔄 Task 10: UI Functions Module (Planned)
-**Estimated:** ~100 lines
+### ⏳ Task 10: UI Functions Module (Ready to Start)
+**Estimated:** 48 lines (verified count)
 
 **Functions to extract:**
-- `updateMaskingStatusBar()` - Status bar updates
-- `showMaskingNotification()` - User notifications
+- `updateMaskingStatusBar()` - Status bar updates with VS Code StatusBarItem
+- `showMaskingNotification()` - User notifications with Settings button
 
-**Target file:** `utils/masking/ui.ts` or keep in main file (minimal)
+**Implementation Details:**
+- Status bar shows: "🛡️ 5 masked" or "🛡️ Masking Active"
+- Auto-hide after 5 seconds
+- Notification format: "Copied with 5 items masked: 2 emails, 1 bsb, ..."
+- Settings button opens masking configuration
+
+**Target file:** `src/utils/masking/ui.ts`
+**Impact:** Reduces maskingEngine.ts from 660 to 612 lines (7% reduction)
 
 ---
 

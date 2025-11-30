@@ -82,3 +82,9 @@ export {
     type ColumnRange,
     type ColumnAlignment
 } from './csvHelpers';
+
+// UI functions
+export {
+    updateMaskingStatusBar,
+    showMaskingNotification
+} from './ui';
