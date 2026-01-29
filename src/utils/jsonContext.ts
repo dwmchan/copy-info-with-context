@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+﻿import * as vscode from 'vscode';
 import { JsonContext } from '../types';
 import { getAbsoluteCharPosition } from './positionHelpers';
 import { safeExecute } from './safeExecution';
@@ -76,7 +76,7 @@ export function findJsonPathByPosition(jsonText: string, position: vscode.Positi
                     break;
 
                 case '}':
-                    if (contextStack.length > 0 && contextStack[contextStack.length - 1]!.type === 'object') {
+                    if (contextStack.length > 0 && (contextStack[contextStack.length - 1] ?? { type: undefined }).type === 'object') {
                         contextStack.pop();
                     }
                     expectingValue = false;
@@ -93,7 +93,7 @@ export function findJsonPathByPosition(jsonText: string, position: vscode.Positi
                     break;
 
                 case ']':
-                    if (contextStack.length > 0 && contextStack[contextStack.length - 1]!.type === 'array') {
+                    if (contextStack.length > 0 && (contextStack[contextStack.length - 1] ?? { type: undefined }).type === 'array') {
                         contextStack.pop();
                     }
                     expectingValue = false;
@@ -118,7 +118,7 @@ export function findJsonPathByPosition(jsonText: string, position: vscode.Positi
                         const currentContext = contextStack[contextStack.length - 1]!;
 
                         if (currentContext.type === 'array') {
-                            currentContext.arrayIndex = (currentContext.arrayIndex || 0) + 1;
+                            currentContext.arrayIndex = (currentContext.arrayIndex ?? 0) + 1;
                         } else if (currentContext.type === 'object') {
                             if (i < targetPosition) {
                                 delete currentContext.key;
@@ -197,3 +197,4 @@ export function getJsonPath(document: vscode.TextDocument, position: vscode.Posi
         return path;
     }, null, 'JSON path detection');
 }
+

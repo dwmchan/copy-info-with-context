@@ -1,8 +1,6 @@
 // confidence.ts - Confidence scoring and statistical validation
 // Phase 1 (v1.6.0): Extracted from monolithic maskingEngine.ts
 
-import { PiiType } from './config';
-
 /**
  * Domain-specific prior probabilities for PII patterns
  * Based on empirical false positive rates
@@ -188,7 +186,7 @@ export function calculateMaskingConfidence(
     patternType: string
 ): number {
     // PHASE 1: Start with domain-specific prior probability
-    const priorProbability = PATTERN_PRIOR_PROBABILITIES[patternType] || 0.5;
+    const priorProbability = PATTERN_PRIOR_PROBABILITIES[patternType] ?? 0.5;
     let confidence = priorProbability;
 
     // PHASE 1: Check for statistical anomalies
@@ -272,7 +270,9 @@ export function isInsideFieldName(text: string, matchIndex: number, matchLength:
     const matchEnd = matchIndex + matchLength;
 
     // Look back and forward to check context
-    const lookbackStart = Math.max(0, matchIndex - 50);
+    // Increased lookback from 50 to 300 chars to handle XML documents with CDATA sections
+    // where opening tags may be far from the match position
+    const lookbackStart = Math.max(0, matchIndex - 300);
     const lookforwardEnd = Math.min(text.length, matchEnd + 50);
 
     const beforeMatch = text.substring(lookbackStart, matchIndex);

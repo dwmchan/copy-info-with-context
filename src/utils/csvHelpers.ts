@@ -1,17 +1,17 @@
-import * as vscode from 'vscode';
+﻿import * as vscode from 'vscode';
 import { CopyConfig, ColumnRange, ColumnAlignment } from '../types';
 import { safeExecute } from './safeExecution';
 
 // Delimited file helper functions
 export function detectDelimiter(text: string): string {
-    const firstLine = text.split('\n')[0] || '';
+    const firstLine = text.split('\n')[0] ?? '';
     const delimiters = [',', '\t', '|', ';', ':'];
 
     let maxCount = 0;
     let bestDelimiter = ',';
 
     for (const delimiter of delimiters) {
-        const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+        const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
         if (count > maxCount) {
             maxCount = count;
             bestDelimiter = delimiter;
@@ -57,17 +57,17 @@ export function getDelimiterName(delimiter: string): string {
         ':': 'CSV (Colon-Separated)',
         ' ': 'SSV (Space-Separated)'
     };
-    return delimiterNames[delimiter] || 'Delimited';
+    return delimiterNames[delimiter] ?? 'Delimited';
 }
 
 export function detectHeaders(text: string): boolean {
     try {
         const lines = text.split('\n').filter(line => line.trim());
-        if (lines.length < 2) return false;
+        if (lines.length < 2) {return false;}
 
         const delimiter = detectDelimiter(text);
-        const firstRowFields = parseDelimitedLine(lines[0]!, delimiter);
-        const secondRowFields = parseDelimitedLine(lines[1]!, delimiter);
+        const firstRowFields = parseDelimitedLine(lines[0] ?? '', delimiter);
+        const secondRowFields = parseDelimitedLine(lines[1] ?? '', delimiter);
 
         if (firstRowFields.length !== secondRowFields.length) {
             return true;
@@ -109,7 +109,7 @@ export function getColumnRangeFromSelection(
             const field = fields[i];
 
             // TypeScript safety: Handle undefined/null fields
-            if (field == null || field === undefined) {
+            if (field === null || field === undefined) {
                 // Skip undefined fields but advance position properly
                 if (i < fields.length - 1) {
                     charPosition += delimiter.length;
@@ -185,11 +185,11 @@ export function getDelimitedContextWithSelection(document: vscode.TextDocument, 
         const delimiterName = getDelimiterName(delimiter);
         const lines = text.split('\n');
 
-        if (lines.length === 0) return delimiterName;
+        if (lines.length === 0) {return delimiterName;}
 
         // Get column information if possible
         const firstLine = lines[0];
-        if (!firstLine) return delimiterName;
+        if (!firstLine) {return delimiterName;}
 
         // Parse headers properly, considering quoted fields
         const headers = parseDelimitedLine(firstLine, delimiter);
@@ -208,11 +208,11 @@ export function getDelimitedContextWithSelection(document: vscode.TextDocument, 
         for (let i = 0; i <= selection.end.line - selection.start.line; i++) {
             const lineNum = selection.start.line + i;
             const currentLine = lines[lineNum];
-            if (!currentLine) continue;
+            if (!currentLine) {continue;}
 
             // Find where the selected text actually starts in this line
             const selectedLineText = selectedLines[i];
-            if (!selectedLineText) continue;
+            if (!selectedLineText) {continue;}
 
             let actualSelectionStart: number;
             if (i === 0) {
@@ -255,7 +255,7 @@ export function getDelimitedContextWithSelection(document: vscode.TextDocument, 
                 // Single column - TypeScript safe
                 let columnName: string;
                 const header = headers[minStartColumn];
-                if (hasHeaders && minStartColumn < headers.length && header != null && header !== undefined) {
+                if (hasHeaders && minStartColumn < headers.length && header !== null && header !== undefined) {
                     columnName = header.trim().replace(/^["']|["']$/g, '');
                 } else {
                     columnName = `Column ${minStartColumn + 1}`;
@@ -267,7 +267,7 @@ export function getDelimitedContextWithSelection(document: vscode.TextDocument, 
 
                 for (let i = minStartColumn; i <= maxEndColumn; i++) {
                     const header = headers[i];
-                    if (hasHeaders && i < headers.length && header != null && header !== undefined) {
+                    if (hasHeaders && i < headers.length && header !== null && header !== undefined) {
                         const headerName = header.trim().replace(/^["']|["']$/g, '');
                         columnNames.push(headerName);
                     } else {
@@ -318,7 +318,7 @@ export function buildAsciiTable(
     // Calculate column widths
     const widths = displayHeaders.map((header, i) => {
         const maxDataWidth = Math.max(
-            ...displayRows.map(row => (row[i] || '').length)
+            ...displayRows.map(row => (row[i] ?? '').length)
         );
         return Math.max(header.length, maxDataWidth, 5);
     });
@@ -327,14 +327,14 @@ export function buildAsciiTable(
     const alignments = detectColumnAlignments(displayRows, config);
 
     // Build table parts
-    const topBorder = '┌' + widths.map(w => '─'.repeat(w + 2)).join('┬') + '┐';
-    const headerRow = '│' + displayHeaders.map((h, i) => ` ${h.padEnd(widths[i]!)} `).join('│') + '│';
-    const headerDivider = '├' + widths.map(w => '─'.repeat(w + 2)).join('┼') + '┤';
+    const topBorder = `â”Œ${  widths.map(w => 'â”€'.repeat(w + 2)).join('â”¬')  }â”`;
+    const headerRow = `â”‚${  displayHeaders.map((h, i) => ` ${h.padEnd(widths[i] ?? 5)} `).join('â”‚')  }â”‚`;
+    const headerDivider = `â”œ${  widths.map(w => 'â”€'.repeat(w + 2)).join('â”¼')  }â”¤`;
 
     const dataRows = displayRows.map(row => {
         const cells = row.map((value, i) => {
-            const width = widths[i]!;
-            const alignment = alignments[i] || 'left';
+            const width = widths[i] ?? 5;
+            const alignment = alignments[i] ?? 'left';
             let paddedValue: string;
 
             if (alignment === 'right') {
@@ -350,10 +350,10 @@ export function buildAsciiTable(
 
             return ` ${paddedValue} `;
         });
-        return '│' + cells.join('│') + '│';
+        return `â”‚${  cells.join('â”‚')  }â”‚`;
     });
 
-    const bottomBorder = '└' + widths.map(w => '─'.repeat(w + 2)).join('┴') + '┘';
+    const bottomBorder = `â””${  widths.map(w => 'â”€'.repeat(w + 2)).join('â”´')  }â”˜`;
 
     const table = [topBorder, headerRow, headerDivider, ...dataRows, bottomBorder];
 
@@ -372,11 +372,11 @@ export function detectColumnAlignments(
     data: string[][],
     config: CopyConfig
 ): ColumnAlignment[] {
-    const columnCount = data[0]?.length || 0;
+    const columnCount = data[0]?.length ?? 0;
     const alignments: ColumnAlignment[] = [];
 
     for (let i = 0; i < columnCount; i++) {
-        const columnValues = data.map(row => row[i] || '');
+        const columnValues = data.map(row => row[i] ?? '');
 
         // Check if mostly numeric
         const numericCount = columnValues.filter(v =>
@@ -402,3 +402,4 @@ export function detectColumnAlignments(
 
     return alignments;
 }
+

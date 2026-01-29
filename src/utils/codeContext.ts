@@ -16,7 +16,7 @@ export function getCodeContext(document: vscode.TextDocument, position: vscode.P
 
         for (let i = targetLine; i >= 0; i--) {
             const line = lines[i];
-            if (!line) continue;
+            if (!line) {continue;}
 
             // JavaScript/TypeScript function patterns
             if (language === 'javascript' || language === 'typescript' ||
@@ -25,7 +25,7 @@ export function getCodeContext(document: vscode.TextDocument, position: vscode.P
                 // function name(...) or const/let name = function(...) or const/let name = (...) =>
                 const functionMatch = line.match(/(?:function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)|(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:function|async\s+function|\([^)]*\)\s*=>))/);
                 if (functionMatch && !functionName) {
-                    functionName = (functionMatch[1] || functionMatch[2]) ?? null;
+                    functionName = (functionMatch[1] ?? functionMatch[2]) ?? null;
                 }
 
                 // Class declarations
@@ -54,7 +54,7 @@ export function getCodeContext(document: vscode.TextDocument, position: vscode.P
                 const classMatch = line.match(/(?:public|private|protected|internal)?\s*(?:static|abstract|sealed)?\s*class\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
                 if (classMatch) {
                     className = classMatch[1] ?? null;
-                    if (functionName) break; // Found both
+                    if (functionName) {break;} // Found both
                 }
 
                 // C# namespace
@@ -77,14 +77,14 @@ export function getCodeContext(document: vscode.TextDocument, position: vscode.P
                 const classMatch = line.match(/^\s*class\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
                 if (classMatch) {
                     className = classMatch[1] ?? null;
-                    if (functionName) break; // Found both
+                    if (functionName) {break;} // Found both
                 }
             }
 
             // PowerShell patterns
             if (language === 'powershell') {
                 // PowerShell function: function Verb-Noun or function FunctionName
-                const functionMatch = line.match(/^\s*function\s+([a-zA-Z][a-zA-Z0-9-_]*)\s*[{\(]/);
+                const functionMatch = line.match(/^\s*function\s+([a-zA-Z][a-zA-Z0-9-_]*)\s*[{(]/);
                 if (functionMatch && !functionName) {
                     functionName = functionMatch[1] ?? null;
                 }
@@ -99,16 +99,16 @@ export function getCodeContext(document: vscode.TextDocument, position: vscode.P
                 const classMatch = line.match(/^\s*class\s+([a-zA-Z][a-zA-Z0-9_]*)/);
                 if (classMatch) {
                     className = classMatch[1] ?? null;
-                    if (functionName) break; // Found both
+                    if (functionName) {break;} // Found both
                 }
             }
         }
 
         // Build context path based on language
         const parts: string[] = [];
-        if (namespaceName) parts.push(namespaceName);
-        if (className) parts.push(className);
-        if (functionName) parts.push(functionName);
+        if (namespaceName) {parts.push(namespaceName);}
+        if (className) {parts.push(className);}
+        if (functionName) {parts.push(functionName);}
 
         return parts.length > 0 ? parts.join(' > ') : null;
     }, null, 'Code context detection');

@@ -65,7 +65,7 @@ export function getDocumentContext(document: vscode.TextDocument, position: vsco
 
 // Path enhancement with array indices
 export function enhancePathWithArrayIndices(baseContext: string, document: vscode.TextDocument, position: vscode.Position, language: string): string {
-    if (!baseContext) return baseContext;
+    if (!baseContext) {return baseContext;}
 
     try {
         switch (language) {
@@ -93,7 +93,7 @@ function enhanceJsonPathWithIndices(jsonText: string, position: vscode.Position,
         }
 
         const accuratePath = findJsonPathByPosition(jsonText, position);
-        return accuratePath || pathParts.join('.');
+        return accuratePath ?? pathParts.join('.');
 
     } catch (error) {
         console.error('Error in enhanceJsonPathWithIndices:', error);
@@ -113,7 +113,7 @@ function enhanceXmlPathWithIndices(xmlText: string, position: vscode.Position, p
         } as vscode.TextDocument;
 
         const accuratePath = getXmlPath(document, position);
-        return accuratePath || pathParts.join(' > ');
+        return accuratePath ?? pathParts.join(' > ');
 
     } catch (error) {
         console.error('Error in enhanceXmlPathWithIndices:', error);

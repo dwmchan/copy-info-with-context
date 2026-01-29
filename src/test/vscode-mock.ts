@@ -1,3 +1,4 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Mock implementation of VS Code API for testing
  * This allows us to run tests in Node.js without the actual VS Code environment
@@ -8,8 +9,8 @@ export class Position {
     
     translate(lineDelta?: number, characterDelta?: number): Position {
         return new Position(
-            this.line + (lineDelta || 0),
-            this.character + (characterDelta || 0)
+            this.line + (lineDelta ?? 0),
+            this.character + (characterDelta ?? 0)
         );
     }
     
@@ -21,10 +22,10 @@ export class Position {
     }
     
     compareTo(other: Position): number {
-        if (this.line < other.line) return -1;
-        if (this.line > other.line) return 1;
-        if (this.character < other.character) return -1;
-        if (this.character > other.character) return 1;
+        if (this.line < other.line) {return -1;}
+        if (this.line > other.line) {return 1;}
+        if (this.character < other.character) {return -1;}
+        if (this.character > other.character) {return 1;}
         return 0;
     }
     
@@ -93,8 +94,8 @@ export class Range {
     
     with(start?: Position, end?: Position): Range {
         return new Range(
-            start || this.start,
-            end || this.end
+            start ?? this.start,
+            end ?? this.end
         );
     }
 }
@@ -135,7 +136,7 @@ export class Uri {
     }
     
     toString(): string {
-        return `${this.scheme}://${this.authority}${this.path}${this.query ? '?' + this.query : ''}${this.fragment ? '#' + this.fragment : ''}`;
+        return `${this.scheme}://${this.authority}${this.path}${this.query ? `?${  this.query}` : ''}${this.fragment ? `#${  this.fragment}` : ''}`;
     }
     
     toJSON(): any {
@@ -198,27 +199,30 @@ export interface WorkspaceConfiguration {
     get<T>(section: string): T | undefined;
     get<T>(section: string, defaultValue: T): T;
     has(section: string): boolean;
-    inspect<T>(section: string): any;
+    inspect(section: string): any;
     update(section: string, value: any): Thenable<void>;
 }
 
 export const workspace = {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getConfiguration: (section?: string): WorkspaceConfiguration => {
-        const mockConfig = new Map<string, any>();
+        const mockConfig = new Map<string, unknown>();
         
         return {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             get: <T>(key: string, defaultValue?: T): T | undefined => {
                 const fullKey = section ? `${section}.${key}` : key;
-                return mockConfig.get(fullKey) ?? defaultValue;
+                return (mockConfig.get(fullKey) as T | undefined) ?? defaultValue;
             },
             has: (key: string): boolean => {
                 const fullKey = section ? `${section}.${key}` : key;
                 return mockConfig.has(fullKey);
             },
-            inspect: (key: string) => undefined,
-            update: async (key: string, value: any) => {
-                const fullKey = section ? `${section}.${key}` : key;
-                mockConfig.set(fullKey, value);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            inspect: (_key: string) => undefined,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            update: (_key: string, _value: unknown): Thenable<void> => {
+                return Promise.resolve();
             }
         };
     }
@@ -226,23 +230,28 @@ export const workspace = {
 
 export const window = {
     activeTextEditor: undefined as TextEditor | undefined,
-    showInformationMessage: (message: string) => Promise.resolve(undefined),
-    showErrorMessage: (message: string) => Promise.resolve(undefined),
-    showQuickPick: <T>(items: T[], options?: any) => Promise.resolve(undefined as T | undefined)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    showInformationMessage: (_message: string) => Promise.resolve(undefined),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    showErrorMessage: (_message: string) => Promise.resolve(undefined),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    showQuickPick: <T>(_items: T[], _options?: any) => Promise.resolve(undefined as T | undefined)
 };
 
 export const env = {
     clipboard: {
-        writeText: async (value: string) => {
-            // Mock clipboard - in real tests you might want to capture this
-            console.log('Clipboard write:', value);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        writeText: (_value: string) => {
+            // Mock clipboard - no-op in tests
         },
-        readText: async () => ''
+        readText: () => ''
     }
 };
 
 export const commands = {
-    registerCommand: (command: string, callback: (...args: any[]) => any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    registerCommand: (_command: string, _callback: (...args: any[]) => any) => {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         return { dispose: () => {} };
     }
 };

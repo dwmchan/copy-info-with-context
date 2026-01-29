@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+﻿import * as vscode from 'vscode';
 import { TagInfo } from '../types';
 import { escapeRegexSpecialChars, tagCountCache } from './cache';
 import { getAbsoluteCharPosition } from './positionHelpers';
@@ -32,71 +32,71 @@ export function countGlobalSiblings(xmlText: string, tagName: string, targetPosi
 }
 
 // Enhanced local sibling counting for XML
+function findContainerByName(xmlText: string, parentTagName: string, targetPosition: number): {start: number, end: number} | null {
+    const parentRegex = new RegExp(`<\\b${escapeRegexSpecialChars(parentTagName)}\\b[^>]*>`, 'g');
+    let parentMatch: RegExpExecArray | null;
+
+    while ((parentMatch = parentRegex.exec(xmlText)) !== null) {
+        const parentStart = parentMatch.index;
+        const parentEnd = xmlText.indexOf(`</${parentTagName}>`, parentStart);
+
+        if (parentStart <= targetPosition && (parentEnd === -1 || parentEnd >= targetPosition)) {
+            return {start: parentStart, end: parentEnd === -1 ? xmlText.length : parentEnd};
+        }
+    }
+
+    return null;
+}
+
+function findActualParentContainer(xmlText: string, targetDepth: number, targetPosition: number): {start: number, end: number} | null {
+    let currentDepth = 0;
+    const targetParentDepth = targetDepth - 1;
+    const allTagsRegex = /<\/?([a-zA-Z][a-zA-Z0-9-_]*)[^>]*>/g;
+    let match: RegExpExecArray | null;
+
+    const elementStack: Array<{name: string, start: number, depth: number}> = [];
+
+    while ((match = allTagsRegex.exec(xmlText)) !== null && match.index < targetPosition) {
+        const fullTag = match[0];
+        const currentTagName = match[1];
+
+        if (!currentTagName) {continue;}
+
+        if (fullTag.startsWith('</')) {
+            for (let i = elementStack.length - 1; i >= 0; i--) {
+                if ((elementStack[i] ?? { name: undefined }).name === currentTagName) {
+                    elementStack.splice(i, 1);
+                    break;
+                }
+            }
+            currentDepth--;
+        } else if (!fullTag.endsWith('/>')) {
+            elementStack.push({
+                name: currentTagName,
+                start: match.index,
+                depth: currentDepth
+            });
+            currentDepth++;
+        }
+    }
+
+    const parent = elementStack.find(el => el.depth === targetParentDepth);
+    if (parent) {
+        const parentEnd = xmlText.indexOf(`</${parent.name}>`, parent.start);
+        return {start: parent.start, end: parentEnd === -1 ? xmlText.length : parentEnd};
+    }
+
+    return null;
+}
+
 export function countSiblingsInCurrentScope(xmlText: string, tagName: string, targetDepth: number, targetPosition: number): number {
     try {
         const escapedTagName = escapeRegexSpecialChars(tagName);
 
-        function findContainerByName(parentTagName: string): {start: number, end: number} | null {
-            const parentRegex = new RegExp(`<\\b${escapeRegexSpecialChars(parentTagName)}\\b[^>]*>`, 'g');
-            let parentMatch: RegExpExecArray | null;
-
-            while ((parentMatch = parentRegex.exec(xmlText)) !== null) {
-                const parentStart = parentMatch.index;
-                const parentEnd = xmlText.indexOf(`</${parentTagName}>`, parentStart);
-
-                if (parentStart <= targetPosition && (parentEnd === -1 || parentEnd >= targetPosition)) {
-                    return {start: parentStart, end: parentEnd === -1 ? xmlText.length : parentEnd};
-                }
-            }
-
-            return null;
-        }
-
-        function findActualParentContainer(): {start: number, end: number} | null {
-            let currentDepth = 0;
-            let targetParentDepth = targetDepth - 1;
-            const allTagsRegex = /<\/?([a-zA-Z][a-zA-Z0-9-_]*)[^>]*>/g;
-            let match: RegExpExecArray | null;
-
-            const elementStack: Array<{name: string, start: number, depth: number}> = [];
-
-            while ((match = allTagsRegex.exec(xmlText)) !== null && match.index < targetPosition) {
-                const fullTag = match[0];
-                const currentTagName = match[1];
-
-                if (!currentTagName) continue;
-
-                if (fullTag.startsWith('</')) {
-                    for (let i = elementStack.length - 1; i >= 0; i--) {
-                        if (elementStack[i]!.name === currentTagName) {
-                            elementStack.splice(i, 1);
-                            break;
-                        }
-                    }
-                    currentDepth--;
-                } else if (!fullTag.endsWith('/>')) {
-                    elementStack.push({
-                        name: currentTagName,
-                        start: match.index,
-                        depth: currentDepth
-                    });
-                    currentDepth++;
-                }
-            }
-
-            const parent = elementStack.find(el => el.depth === targetParentDepth);
-            if (parent) {
-                const parentEnd = xmlText.indexOf(`</${parent.name}>`, parent.start);
-                return {start: parent.start, end: parentEnd === -1 ? xmlText.length : parentEnd};
-            }
-
-            return null;
-        }
-
         // Find parent container using multiple strategies
         const strategies = [
             // Strategy 1: Simple pluralization
-            () => findContainerByName(tagName + 's'),
+            () => findContainerByName(xmlText, `${tagName}s`, targetPosition),
 
             // Strategy 2: Common XML patterns
             () => {
@@ -110,21 +110,21 @@ export function countSiblingsInCurrentScope(xmlText: string, tagName: string, ta
                 };
 
                 const parentName = commonParents[tagName as keyof typeof commonParents];
-                return parentName ? findContainerByName(parentName) : null;
+                return parentName ? findContainerByName(xmlText, parentName, targetPosition) : null;
             },
 
             // Strategy 3: Dynamic parent detection
-            () => findActualParentContainer()
+            () => findActualParentContainer(xmlText, targetDepth, targetPosition)
         ];
 
         // Try strategies until one succeeds
         let parentContainer: {start: number, end: number} | null = null;
         for (const strategy of strategies) {
             parentContainer = strategy();
-            if (parentContainer) break;
+            if (parentContainer) {break;}
         }
 
-        if (!parentContainer) return 0;
+        if (!parentContainer) {return 0;}
 
         // Count siblings within the parent container
         const containerText = xmlText.substring(parentContainer.start, parentContainer.end);
@@ -157,7 +157,7 @@ export function countTotalSiblingsInScope(xmlText: string, tagName: string, targ
         let currentDepth = 0;
         let parentStartPos = -1;
         let parentEndPos = xmlText.length;
-        let targetParentDepth = targetDepth - 1;
+        const targetParentDepth = targetDepth - 1;
         let foundParentStart = false;
 
         tagRegex.lastIndex = 0;
@@ -167,7 +167,7 @@ export function countTotalSiblingsInScope(xmlText: string, tagName: string, targ
             const fullTag = match[0];
             const currentTagName = match[1];
 
-            if (!currentTagName) continue;
+            if (!currentTagName) {continue;}
 
             if (fullTag.startsWith('</')) {
                 if (foundParentStart && currentDepth === targetParentDepth + 1) {
@@ -184,7 +184,7 @@ export function countTotalSiblingsInScope(xmlText: string, tagName: string, targ
             }
         }
 
-        if (parentStartPos === -1) return 1;
+        if (parentStartPos === -1) {return 1;}
 
         const parentText = xmlText.substring(parentStartPos, parentEndPos);
         const escapedTagName = escapeRegexSpecialChars(tagName);
@@ -236,10 +236,10 @@ export function getXmlPath(document: vscode.TextDocument, position: vscode.Posit
             const fullTag = match[0];
             const tagName = match[1];
 
-            if (!tagName) continue;
+            if (!tagName) {continue;}
 
             if (fullTag.startsWith('</')) {
-                if (tagStack.length > 0 && tagStack[tagStack.length - 1]!.name === tagName) {
+                if (tagStack.length > 0 && (tagStack[tagStack.length - 1] ?? { name: undefined }).name === tagName) {
                     tagStack.pop();
                 }
                 currentDepth--;
@@ -251,9 +251,9 @@ export function getXmlPath(document: vscode.TextDocument, position: vscode.Posit
                 tagStack.push({
                     name: tagName,
                     depth: currentDepth,
-                    siblingIndex: siblingIndex,
-                    globalIndex: globalIndex,
-                    totalSiblings: totalSiblings
+                    siblingIndex,
+                    globalIndex,
+                    totalSiblings
                 });
 
                 currentDepth++;
@@ -282,3 +282,4 @@ export function getXmlPath(document: vscode.TextDocument, position: vscode.Posit
 
     }, null, 'XML path detection');
 }
+

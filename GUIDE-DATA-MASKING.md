@@ -1068,6 +1068,71 @@ API_KEY=sk_example_####################
 
 ---
 
+### CDATA Content Masking
+
+**Added in v1.6.1** - XML CDATA sections now properly mask PII content.
+
+**What are CDATA sections?**
+CDATA (Character Data) sections in XML allow you to include text that should not be parsed as XML markup:
+```xml
+<description><![CDATA[
+  Customer: Alice Johnson
+  Email: alice.johnson@email.com
+  Phone: +61 412 345 678
+]]></description>
+```
+
+**Problem in v1.6.0 and earlier:**
+- PII patterns inside CDATA sections were not being masked
+- Root cause: CDATA content was treated as plain text, raising the confidence threshold from 0.6 to 0.85
+- This prevented detection of emails, phones, credit cards, BSB, TFN, ABN, and other patterns
+
+**Solution in v1.6.1:**
+- CDATA content is now treated as structured data (like XML)
+- Confidence threshold lowered to 0.6 for better sensitivity
+- All PII types are properly detected and masked within CDATA
+
+**Example:**
+
+**Before (v1.6.0):**
+```xml
+<order id="ORD-001">
+    <description><![CDATA[
+        Customer: Alice Johnson
+        Email: alice.johnson@email.com  ← NOT masked ❌
+        Phone: +61 412 345 678          ← NOT masked ❌
+        BSB: 123-456                     ← NOT masked ❌
+    ]]></description>
+</order>
+```
+
+**After (v1.6.1):**
+```xml
+<order id="ORD-001">
+    <description><![CDATA[
+        Customer: Alice Johnson
+        Email: a***@e***.com             ← Masked ✅
+        Phone: +61**********78           ← Masked ✅
+        BSB: ***-*56                     ← Masked ✅
+    ]]></description>
+</order>
+```
+
+**Supported in CDATA:**
+- ✅ All personal identifiers (email, phone, address, DOB)
+- ✅ All financial data (credit cards, account numbers, IBAN, SWIFT)
+- ✅ All Australian banking (BSB, TFN, ABN, Medicare)
+- ✅ All identity documents (passports, driver's licenses, national IDs)
+- ✅ All enterprise identifiers (client numbers, transaction IDs, policy numbers)
+
+**Use Cases:**
+- **API Response Logging**: SOAP/REST APIs that include PII in CDATA-wrapped messages
+- **Database Exports**: Legacy XML exports that use CDATA for free-text fields
+- **Document Management**: XML documents with CDATA-wrapped descriptions or notes
+- **Configuration Files**: Application configs with CDATA sections containing credentials
+
+---
+
 ### Statistical Anomaly Detection
 
 **Added in v1.4.3** - Automatically detects and skips test/placeholder data to reduce false positives.

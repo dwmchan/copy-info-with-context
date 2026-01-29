@@ -310,14 +310,14 @@ export const FORMAT_VALIDATORS: {
 	// Luhn algorithm for credit cards
 	creditCard: (s: string): boolean => {
 		const digits = (s || '').toString().replace(/\D/g, '');
-		if (digits.length < 13 || digits.length > 19) return false;
+		if (digits.length < 13 || digits.length > 19) {return false;}
 		let sum = 0;
 		let doubleNext = false;
 		for (let i = digits.length - 1; i >= 0; i--) {
 			let d = parseInt(digits[i] ?? '0', 10);
 			if (doubleNext) {
 				d *= 2;
-				if (d > 9) d -= 9;
+				if (d > 9) {d -= 9;}
 			}
 			sum += d;
 			doubleNext = !doubleNext;
@@ -328,7 +328,7 @@ export const FORMAT_VALIDATORS: {
 	// Australian TFN (8 or 9 digits) checksum
 	australianTFN: (s: string): boolean => {
 		const digits = (s || '').toString().replace(/\D/g, '');
-		if (![8, 9].includes(digits.length)) return false;
+		if (![8, 9].includes(digits.length)) {return false;}
 		const weights = digits.length === 8 ? [10, 7, 8, 4, 6, 3, 5, 2] : [1, 4, 3, 7, 5, 8, 6, 9, 10];
 		let sum = 0;
 		for (let i = 0; i < digits.length; i++) {
@@ -340,7 +340,7 @@ export const FORMAT_VALIDATORS: {
 	// Australian ABN check (11 digits)
 	australianABN: (s: string): boolean => {
 		const digits = (s || '').toString().replace(/\D/g, '');
-		if (digits.length !== 11) return false;
+		if (digits.length !== 11) {return false;}
 		const weights = [10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
 		let sum = 0;
 		const firstAdjusted = parseInt(digits[0] ?? '0', 10) - 1;
@@ -353,7 +353,7 @@ export const FORMAT_VALIDATORS: {
 
 	// Date of birth plausibility validator
 	dateOfBirth: (s: string): boolean => {
-		if (!s || typeof s !== 'string') return false;
+		if (!s || typeof s !== 'string') {return false;}
 		const normalized = s.trim();
 		let year: number | null = null;
 		let month: number | null = null;
@@ -373,29 +373,29 @@ export const FORMAT_VALIDATORS: {
 			return false;
 		}
 
-		if (!year || !month || !day) return false;
+		if (!year || !month || !day) {return false;}
 		const dt = new Date(year, month - 1, day);
-		if (Number.isNaN(dt.getTime())) return false;
+		if (Number.isNaN(dt.getTime())) {return false;}
 
 		const now = new Date();
 		let age = now.getFullYear() - dt.getFullYear();
 		const m = now.getMonth() - dt.getMonth();
-		if (m < 0 || (m === 0 && now.getDate() < dt.getDate())) age--;
+		if (m < 0 || (m === 0 && now.getDate() < dt.getDate())) {age--;}
 		return age >= 0 && age < 130;
 	},
 
 	// Basic email format validator
 	email: (s: string): boolean => {
-		if (!s || typeof s !== 'string') return false;
+		if (!s || typeof s !== 'string') {return false;}
 		const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		return re.test(s.trim());
 	},
 
 	// IBAN validator (length + mod97) - defensive and avoids undefined chars
 	iban: (s: string): boolean => {
-		if (!s || typeof s !== 'string') return false;
+		if (!s || typeof s !== 'string') {return false;}
 		const v = s.replace(/\s+/g, '').toUpperCase();
-		if (v.length < 15 || v.length > 34) return false;
+		if (v.length < 15 || v.length > 34) {return false;}
 		const rearranged = v.slice(4) + v.slice(0, 4);
 		let numeric = '';
 		for (let i = 0; i < rearranged.length; i++) {

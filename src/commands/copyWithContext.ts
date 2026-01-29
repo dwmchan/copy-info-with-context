@@ -1,9 +1,9 @@
-import * as vscode from 'vscode';
+﻿import * as vscode from 'vscode';
 import * as path from 'path';
 import { getConfig } from '../utils/config';
 import { getDocumentContext, enhancePathWithArrayIndices } from '../utils/documentContext';
 import { formatCodeWithLineNumbers } from '../utils/formatting';
-import { detectDelimiter, parseDelimitedLine, buildAsciiTable, getDelimitedContextWithSelection } from '../utils/csvHelpers';
+import { detectDelimiter, buildAsciiTable, getDelimitedContextWithSelection } from '../utils/csvHelpers';
 import { getFileSizeInfo } from '../utils/fileHelpers';
 import {
     maskText,
@@ -11,7 +11,6 @@ import {
     getMaskingConfig,
     updateMaskingStatusBar,
     showMaskingNotification,
-    formatOutputWithMaskingStats,
     MaskedResult
 } from '../utils/maskingEngine';
 
@@ -43,17 +42,17 @@ export function alignCsvLinesToLeftmostColumn(
                 selectionStartChar = selection.start.character;
             } else {
                 // For subsequent lines, find where the selected text appears in the full line
-                const selectedLineText = lines[i]!;
+                const selectedLineText = lines[i] ?? '';
                 const indexInLine = fullLine.indexOf(selectedLineText);
                 selectionStartChar = indexInLine >= 0 ? indexInLine : 0;
             }
 
             // Count delimiters before selection
             const beforeSelection = fullLine.substring(0, selectionStartChar);
-            const delimiterCount = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+            const delimiterCount = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
 
             // Check if starts mid-field
-            const firstChar = lines[i]!.charAt(0);
+            const firstChar = (lines[i] ?? '').charAt(0);
             const startsWithPartialField = firstChar !== delimiter && firstChar !== '"' && firstChar !== "'";
 
             lineColumnStarts.push(startsWithPartialField ? delimiterCount + 1 : delimiterCount);
@@ -71,7 +70,7 @@ export function alignCsvLinesToLeftmostColumn(
         try {
             const lineNumber = startLine - 1 + i;
             const fullLine = document.lineAt(lineNumber).text;
-            const currentColumn = lineColumnStarts[i]!;
+            const currentColumn = lineColumnStarts[i] ?? 0;
 
             if (currentColumn > minColumn) {
                 // Find position of minColumn-th delimiter
@@ -93,13 +92,13 @@ export function alignCsvLinesToLeftmostColumn(
                 } else if (trimPosition > 0) {
                     trimmedLines.push(fullLine.substring(trimPosition));
                 } else {
-                    trimmedLines.push(lines[i]!);
+                    trimmedLines.push(lines[i] ?? '');
                 }
             } else {
-                trimmedLines.push(lines[i]!);
+                trimmedLines.push(lines[i] ?? '');
             }
         } catch {
-            trimmedLines.push(lines[i]!);
+            trimmedLines.push(lines[i] ?? '');
         }
     }
 
@@ -151,7 +150,6 @@ export async function handleCopyWithContext(): Promise<void> {
 
         if (isCsvFile) {
             // For CSV, we need to provide headers if user selected data rows without header
-            const delimiter = detectDelimiter(document.getText());
             let headersLine: string | undefined;
 
             // If selection starts after line 1, get the header from line 1
@@ -218,7 +216,7 @@ export async function handleCopyWithContext(): Promise<void> {
 
                     // Count delimiters before selection
                     const beforeSelection = fullLine.substring(0, selectionStart);
-                    const delimiterCount = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+                    const delimiterCount = (beforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
 
                     // If started with partial field, we're now at the next column
                     columnOffset = startsWithPartialField ? delimiterCount + 1 : delimiterCount;
@@ -236,13 +234,13 @@ export async function handleCopyWithContext(): Promise<void> {
                             lineSelStart = selection.start.character;
                         } else {
                             // Find where the selected text appears in the full line
-                            const selectedLineText = lines[i]!;
+                            const selectedLineText = lines[i] ?? '';
                             const indexInLine = lineFullText.indexOf(selectedLineText);
                             lineSelStart = indexInLine >= 0 ? indexInLine : 0;
                         }
 
                         const lineBeforeSelection = lineFullText.substring(0, lineSelStart);
-                        const lineDelimiterCount = (lineBeforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+                        const lineDelimiterCount = (lineBeforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
                         const lineFirstChar = lines[i]!.charAt(0);
                         const lineStartsPartial = lineFirstChar !== delimiter && lineFirstChar !== '"' && lineFirstChar !== "'";
                         lineColumnStarts.push(lineStartsPartial ? lineDelimiterCount + 1 : lineDelimiterCount);
@@ -270,27 +268,27 @@ export async function handleCopyWithContext(): Promise<void> {
                     const headerLine = document.lineAt(0).text;
                     if (headerLine.includes(delimiter)) {
                         const allHeaders = headerLine.split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ''));
-                        const selectedColumnCount = rows[0]?.length || 0;
+                        const selectedColumnCount = rows[0]?.length ?? 0;
 
                         // Take headers starting from columnOffset
                         if (allHeaders.length >= columnOffset + selectedColumnCount) {
                             headers = allHeaders.slice(columnOffset, columnOffset + selectedColumnCount);
                         } else {
                             // Fallback to generic names if something is wrong
-                            headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                            headers = (rows[0] ?? []).map((_, idx) => `Column_${idx + 1}`);
                         }
                     } else {
-                        headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                        headers = (rows[0] ?? []).map((_, idx) => `Column_${idx + 1}`);
                     }
                 } catch {
-                    headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                    headers = (rows[0] ?? []).map((_, idx) => `Column_${idx + 1}`);
                 }
             } else if (startLine === 1) {
                 // Selection includes line 1 - use first row as header, rest as data
-                headers = rows[0]!;
+                headers = rows[0] ?? [];
                 dataRows = rows.slice(1);
             } else {
-                headers = rows[0]!.map((_, idx) => `Column_${idx + 1}`);
+                headers = (rows[0] ?? []).map((_, idx) => `Column_${idx + 1}`);
             }
 
             if (dataRows.length === 0) {
@@ -305,10 +303,10 @@ export async function handleCopyWithContext(): Promise<void> {
                 const header = `// ${displayName}:${lineRange}`;
                 const summary = ` | ${dataRows.length} record${dataRows.length !== 1 ? 's' : ''}`;
 
-                const output = `${header}${summary}\n\n${table}\n\n// Summary: ${dataRows.length} row${dataRows.length !== 1 ? 's' : ''} × ${headers.length} column${headers.length !== 1 ? 's' : ''}`;
+                const output = `${header}${summary}\n\n${table}\n\n// Summary: ${dataRows.length} row${dataRows.length !== 1 ? 's' : ''} Ã— ${headers.length} column${headers.length !== 1 ? 's' : ''}`;
 
                 await vscode.env.clipboard.writeText(output);
-                vscode.window.showInformationMessage('CSV data copied as table!');
+                void vscode.window.showInformationMessage('CSV data copied as table!');
                 return;
             } else if (config.csvOutputMode === 'smart') {
                 // SMART mode - compact with types
@@ -323,12 +321,12 @@ export async function handleCopyWithContext(): Promise<void> {
                 }).join('\n');
 
                 // Detect column types
-                const types = headers.map((h, i) => {
-                    const colValues = dataRows.map(r => r[i] || '');
+                const types = headers.map((_h, i) => {
+                    const colValues = dataRows.map(r => r[i] ?? '');
                     const numCount = colValues.filter(v => !isNaN(Number(v)) && v.trim() !== '').length;
                     const boolCount = colValues.filter(v => ['true', 'false', 'yes', 'no', '1', '0'].includes(v.toLowerCase())).length;
 
-                    if (boolCount > colValues.length * 0.7) return 'Boolean';
+                    if (boolCount > colValues.length * 0.7) {return 'Boolean';}
                     if (numCount > colValues.length * 0.7) {
                         const hasDecimals = colValues.some(v => v.includes('.'));
                         return hasDecimals ? 'Float' : 'Integer';
@@ -339,7 +337,7 @@ export async function handleCopyWithContext(): Promise<void> {
                 const output = `${header}\n// Columns: ${headers.join(', ')}\n// Types: ${types.join(', ')}\n\n${formattedRows}`;
 
                 await vscode.env.clipboard.writeText(output);
-                vscode.window.showInformationMessage('CSV data copied in SMART mode!');
+                void vscode.window.showInformationMessage('CSV data copied in SMART mode!');
                 return;
             } else if (config.csvOutputMode === 'detailed') {
                 // DETAILED mode - Full intelligence with analytics and insights
@@ -354,12 +352,12 @@ export async function handleCopyWithContext(): Promise<void> {
                 }).join('\n');
 
                 // Detect column types
-                const types = headers.map((h, i) => {
-                    const colValues = dataRows.map(r => r[i] || '');
+                const types = headers.map((_h, i) => {
+                    const colValues = dataRows.map(r => r[i] ?? '');
                     const numCount = colValues.filter(v => !isNaN(Number(v)) && v.trim() !== '').length;
                     const boolCount = colValues.filter(v => ['true', 'false', 'yes', 'no', '1', '0'].includes(v.toLowerCase())).length;
 
-                    if (boolCount > colValues.length * 0.7) return 'Boolean';
+                    if (boolCount > colValues.length * 0.7) {return 'Boolean';}
                     if (numCount > colValues.length * 0.7) {
                         const hasDecimals = colValues.some(v => v.includes('.'));
                         return hasDecimals ? 'Float' : 'Integer';
@@ -370,7 +368,7 @@ export async function handleCopyWithContext(): Promise<void> {
                 // Calculate statistics for numeric columns
                 const statistics: string[] = [];
                 headers.forEach((h, i) => {
-                    const colValues = dataRows.map(r => r[i] || '');
+                    const colValues = dataRows.map(r => r[i] ?? '');
                     const numericValues = colValues.filter(v => !isNaN(Number(v)) && v.trim() !== '').map(v => Number(v));
 
                     if (numericValues.length > colValues.length * 0.7) {
@@ -396,8 +394,8 @@ export async function handleCopyWithContext(): Promise<void> {
                 }
 
                 // Check for status/category columns
-                const categoryColumns = headers.filter((h, i) => {
-                    const colValues = dataRows.map(r => r[i] || '');
+                const categoryColumns = headers.filter((_h, i) => {
+                    const colValues = dataRows.map(r => r[i] ?? '');
                     const uniqueValues = new Set(colValues);
                     return uniqueValues.size < colValues.length * 0.5 && uniqueValues.size > 1;
                 });
@@ -418,8 +416,8 @@ export async function handleCopyWithContext(): Promise<void> {
                 // Build detailed output
                 const parts: string[] = [
                     header,
-                    '// Columns: ' + headers.join(', '),
-                    '// Types: ' + types.join(', '),
+                    `// Columns: ${  headers.join(', ')}`,
+                    `// Types: ${  types.join(', ')}`,
                     ''
                 ];
 
@@ -438,12 +436,12 @@ export async function handleCopyWithContext(): Promise<void> {
                 parts.push('// Data:');
                 parts.push(formattedRows);
                 parts.push('');
-                parts.push(`// Summary: ${dataRows.length} row${dataRows.length !== 1 ? 's' : ''} × ${headers.length} column${headers.length !== 1 ? 's' : ''}`);
+                parts.push(`// Summary: ${dataRows.length} row${dataRows.length !== 1 ? 's' : ''} Ã— ${headers.length} column${headers.length !== 1 ? 's' : ''}`);
 
                 const output = parts.join('\n');
 
                 await vscode.env.clipboard.writeText(output);
-                vscode.window.showInformationMessage('CSV data copied in DETAILED mode!');
+                void vscode.window.showInformationMessage('CSV data copied in DETAILED mode!');
                 return;
             }
         }
@@ -518,8 +516,10 @@ export async function handleCopyWithContext(): Promise<void> {
 
     // Show different message for performance mode
     if (sizeInfo.isLarge) {
-        vscode.window.showInformationMessage(`Code copied! (Performance mode: ${sizeInfo.lineCount} lines)`);
+        void vscode.window.showInformationMessage(`Code copied! (Performance mode: ${sizeInfo.lineCount} lines)`);
     } else {
-        vscode.window.showInformationMessage('Code copied with context!');
+        void vscode.window.showInformationMessage('Code copied with context!');
     }
 }
+
+

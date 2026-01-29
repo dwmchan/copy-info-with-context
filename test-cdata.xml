@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<orders>
+    <order id="ORD-001">
+        <description><![CDATA[
+            Customer: Alice Johnson
+            Email: alice.johnson@email.com
+            Phone: +61 412 345 678
+            BSB: 123-456
+            Account: 987654321
+        ]]></description>
+        <total>250.00</total>
+    </order>
+
+    <order id="ORD-002">
+        <description><![CDATA[
+            Name: Bob Smith
+            Contact: bob.smith@company.com
+            Mobile: +61 423 567 890
+            TFN: 123 456 789
+        ]]></description>
+        <total>450.00</total>
+    </order>
+
+    <order id="ORD-003">
+        <description><![CDATA[
+            Customer Information:
+            Name: Robert Chen
+            Email: robert.chen@company.com
+            Phone: +61 407 888 999
+            Credit Card: 4532 1234 5678 9010
+        ]]></description>
+        <bsb>345-678</bsb>
+        <accountNumber>888999777</accountNumber>
+    </order>
+
+    <order id="ORD-004">
+        <customerName>Sarah Mitchell</customerName>
+        <email>sarah.mitchell@enterprise.com</email>
+        <notes><![CDATA[
+            VIP Customer
+            Previous orders: 15
+            Total spent: $12,500
+            Last contact: 2024-01-15
+            Passport: N1234567
+        ]]></notes>
+    </order>
+</orders>

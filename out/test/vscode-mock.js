@@ -1,4 +1,5 @@
 "use strict";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Mock implementation of VS Code API for testing
  * This allows us to run tests in Node.js without the actual VS Code environment
@@ -13,20 +14,24 @@ class Position {
         this.character = character;
     }
     translate(lineDelta, characterDelta) {
-        return new Position(this.line + (lineDelta || 0), this.character + (characterDelta || 0));
+        return new Position(this.line + (lineDelta ?? 0), this.character + (characterDelta ?? 0));
     }
     with(line, character) {
         return new Position(line !== undefined ? line : this.line, character !== undefined ? character : this.character);
     }
     compareTo(other) {
-        if (this.line < other.line)
+        if (this.line < other.line) {
             return -1;
-        if (this.line > other.line)
+        }
+        if (this.line > other.line) {
             return 1;
-        if (this.character < other.character)
+        }
+        if (this.character < other.character) {
             return -1;
-        if (this.character > other.character)
+        }
+        if (this.character > other.character) {
             return 1;
+        }
         return 0;
     }
     isEqual(other) {
@@ -82,7 +87,7 @@ class Range {
         return new Range(start, end);
     }
     with(start, end) {
-        return new Range(start || this.start, end || this.end);
+        return new Range(start ?? this.start, end ?? this.end);
     }
 }
 exports.Range = Range;
@@ -119,7 +124,7 @@ class Uri {
         return new Uri('file', '', value, '', '');
     }
     toString() {
-        return `${this.scheme}://${this.authority}${this.path}${this.query ? '?' + this.query : ''}${this.fragment ? '#' + this.fragment : ''}`;
+        return `${this.scheme}://${this.authority}${this.path}${this.query ? `?${this.query}` : ''}${this.fragment ? `#${this.fragment}` : ''}`;
     }
     toJSON() {
         return {
@@ -138,9 +143,11 @@ var EndOfLine;
     EndOfLine[EndOfLine["CRLF"] = 2] = "CRLF";
 })(EndOfLine = exports.EndOfLine || (exports.EndOfLine = {}));
 exports.workspace = {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getConfiguration: (section) => {
         const mockConfig = new Map();
         return {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             get: (key, defaultValue) => {
                 const fullKey = section ? `${section}.${key}` : key;
                 return mockConfig.get(fullKey) ?? defaultValue;
@@ -149,31 +156,37 @@ exports.workspace = {
                 const fullKey = section ? `${section}.${key}` : key;
                 return mockConfig.has(fullKey);
             },
-            inspect: (key) => undefined,
-            update: async (key, value) => {
-                const fullKey = section ? `${section}.${key}` : key;
-                mockConfig.set(fullKey, value);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            inspect: (_key) => undefined,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            update: (_key, _value) => {
+                return Promise.resolve();
             }
         };
     }
 };
 exports.window = {
     activeTextEditor: undefined,
-    showInformationMessage: (message) => Promise.resolve(undefined),
-    showErrorMessage: (message) => Promise.resolve(undefined),
-    showQuickPick: (items, options) => Promise.resolve(undefined)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    showInformationMessage: (_message) => Promise.resolve(undefined),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    showErrorMessage: (_message) => Promise.resolve(undefined),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    showQuickPick: (_items, _options) => Promise.resolve(undefined)
 };
 exports.env = {
     clipboard: {
-        writeText: async (value) => {
-            // Mock clipboard - in real tests you might want to capture this
-            console.log('Clipboard write:', value);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        writeText: (_value) => {
+            // Mock clipboard - no-op in tests
         },
-        readText: async () => ''
+        readText: () => ''
     }
 };
 exports.commands = {
-    registerCommand: (command, callback) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+    registerCommand: (_command, _callback) => {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         return { dispose: () => { } };
     }
 };

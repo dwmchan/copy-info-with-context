@@ -40,10 +40,10 @@ export function getBasicDocumentContext(document: vscode.TextDocument): string |
     }
 
     // Check by extension for unrecognized files
-    if (filename.endsWith('.json') || filename.endsWith('.jsonc')) return 'JSON (Large File)';
-    if (filename.endsWith('.xml') || filename.endsWith('.html')) return 'XML (Large File)';
-    if (filename.endsWith('.csv')) return 'CSV (Large File)';
-    if (filename.endsWith('.tsv')) return 'TSV (Large File)';
+    if (filename.endsWith('.json') || filename.endsWith('.jsonc')) {return 'JSON (Large File)';}
+    if (filename.endsWith('.xml') || filename.endsWith('.html')) {return 'XML (Large File)';}
+    if (filename.endsWith('.csv')) {return 'CSV (Large File)';}
+    if (filename.endsWith('.tsv')) {return 'TSV (Large File)';}
 
     return null;
 }

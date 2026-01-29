@@ -14,7 +14,7 @@ export function formatCodeWithLineNumbers(
 
     // Find minimum indentation across all non-empty lines
     const minIndent = lines.reduce((min: number, line: string) => {
-        if (line.trim().length === 0) return min; // Skip empty lines
+        if (line.trim().length === 0) {return min;} // Skip empty lines
         const indent = line.length - line.trimStart().length;
         return Math.min(min, indent);
     }, Infinity);

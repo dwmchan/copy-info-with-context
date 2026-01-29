@@ -1,4 +1,4 @@
-import { test, describe } from 'node:test';
+﻿import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
 import * as vscode from './vscode-mock.js';
 
@@ -42,14 +42,14 @@ function createMockDocument(content: string, languageId: string, fileName: strin
     
     // Helper function to create TextLine
     const createTextLine = (lineNumber: number): vscode.TextLine => {
-        const lineText = lines[lineNumber] || '';
+        const lineText = lines[lineNumber] ?? '';
         const lineStart = new vscode.Position(lineNumber, 0);
         const lineEnd = new vscode.Position(lineNumber, lineText.length);
         const lineRange = new vscode.Range(lineStart, lineEnd);
         const lineRangeIncludingLineBreak = new vscode.Range(lineStart, new vscode.Position(lineNumber, lineText.length + 1));
         
         return {
-            lineNumber: lineNumber,
+            lineNumber,
             text: lineText,
             range: lineRange,
             rangeIncludingLineBreak: lineRangeIncludingLineBreak,
@@ -60,8 +60,8 @@ function createMockDocument(content: string, languageId: string, fileName: strin
     
     return {
         getText: () => content,
-        languageId: languageId,
-        fileName: fileName,
+        languageId,
+        fileName,
         lineAt: ((lineOrPosition: number | vscode.Position): vscode.TextLine => {
             if (typeof lineOrPosition === 'number') {
                 return createTextLine(lineOrPosition);
@@ -77,24 +77,24 @@ function createMockDocument(content: string, languageId: string, fileName: strin
         eol: vscode.EndOfLine.LF,
         lineCount: lines.length,
         encoding: 'utf8',
-        save: async () => true,
+        save: () => Promise.resolve(true),
         offsetAt: (position: vscode.Position) => {
             let offset = 0;
             for (let i = 0; i < position.line && i < lines.length; i++) {
-                offset += lines[i]!.length + 1; // +1 for newline
+                offset += (lines[i] ?? '').length + 1; // +1 for newline
             }
             return offset + position.character;
         },
         positionAt: (offset: number) => {
             let currentOffset = 0;
             for (let line = 0; line < lines.length; line++) {
-                const lineLength = lines[line]!.length + 1; // +1 for newline
+                const lineLength = (lines[line] ?? '').length + 1; // +1 for newline
                 if (currentOffset + lineLength > offset) {
                     return new vscode.Position(line, offset - currentOffset);
                 }
                 currentOffset += lineLength;
             }
-            return new vscode.Position(lines.length - 1, lines[lines.length - 1]?.length || 0);
+            return new vscode.Position(lines.length - 1, lines[lines.length - 1]?.length ?? 0);
         },
         getWordRangeAtPosition: () => undefined,
         validateRange: (range: vscode.Range) => range,
@@ -138,14 +138,14 @@ describe('Extension Core Functions', () => {
     test('detectDelimiter identifies correct delimiter', () => {
         // Helper function (copied from extension.ts for testing)
         function detectDelimiter(text: string): string {
-            const firstLine = text.split('\n')[0] || '';
+            const firstLine = text.split('\n')[0] ?? '';
             const delimiters = [',', '\t', '|', ';', ':'];
             
             let maxCount = 0;
             let bestDelimiter = ',';
             
             for (const delimiter of delimiters) {
-                const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+                const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
                 if (count > maxCount) {
                     maxCount = count;
                     bestDelimiter = delimiter;
@@ -209,7 +209,7 @@ describe('Extension Core Functions', () => {
                 ':': 'CSV (Colon-Separated)',
                 ' ': 'SSV (Space-Separated)'
             };
-            return delimiterNames[delimiter] || 'Delimited';
+            return delimiterNames[delimiter] ?? 'Delimited';
         }
         
         assert.equal(getDelimiterName(','), 'CSV (Comma-Separated)');
@@ -282,7 +282,7 @@ describe('JSON Path Detection', () => {
     
     test('findJsonPathByPosition detects simple object paths', () => {
         // Simplified version for testing
-        function findJsonPathByPosition(jsonText: string, line: number, char: number): string | null {
+        function findJsonPathByPosition(jsonText: string, line: number, _char: number): string | null {
             // This is a simplified test version - the real implementation is more complex
             if (jsonText.includes('"name"') && line === 2) {
                 return 'users[0].name';
@@ -299,7 +299,6 @@ describe('JSON Path Detection', () => {
 
     test('JSON path handles array indices correctly', () => {
         // Test that we can detect array indices in JSON
-        const jsonWithArrays = '{"items": [{"id": 1}, {"id": 2}, {"id": 3}]}';
         
         // Mock position at second array element
         // In real implementation, this would use the actual position calculation
@@ -320,7 +319,7 @@ describe('XML Path Detection', () => {
         // Find line with third Relation element
         let targetLine = -1;
         for (let i = 0; i < xmlLines.length; i++) {
-            if (xmlLines[i]!.includes('rel3')) {
+            if ((xmlLines[i] ?? '').includes('rel3')) {
                 targetLine = i;
                 break;
             }

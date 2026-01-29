@@ -1,13 +1,17 @@
-import * as vscode from 'vscode';
+﻿import * as vscode from 'vscode';
 import * as path from 'path';
 import { getConfig } from '../utils/config';
 import { getDocumentContext, enhancePathWithArrayIndices } from '../utils/documentContext';
 import { formatCodeWithLineNumbers, createHtmlWithSyntaxHighlighting } from '../utils/formatting';
-import { getDelimitedContextWithSelection } from '../utils/csvHelpers';
+import { getDelimitedContextWithSelection, detectDelimiter } from '../utils/csvHelpers';
 import { alignCsvLinesToLeftmostColumn } from './copyWithContext';
 
 export async function handleCopyWithHtmlHighlighting(): Promise<void> {
-    const editor = vscode.window.activeTextEditor!;
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        void vscode.window.showWarningMessage('No active editor found');
+        return;
+    }
     const document = editor.document;
     const selection = editor.selection;
 
@@ -44,7 +48,6 @@ export async function handleCopyWithHtmlHighlighting(): Promise<void> {
     );
 
     if (isCSVFile && !selection.isEmpty) {
-        const { detectDelimiter } = require('../utils/csvHelpers');
         const delimiter = detectDelimiter(document.getText());
         const lines = selectedText.split('\n');
 
@@ -94,5 +97,6 @@ export async function handleCopyWithHtmlHighlighting(): Promise<void> {
     const htmlOutput = createHtmlWithSyntaxHighlighting(formattedContent, document.languageId, header);
 
     await vscode.env.clipboard.writeText(htmlOutput);
-    vscode.window.showInformationMessage('Code copied with HTML highlighting!');
+    void vscode.window.showInformationMessage('Code copied with HTML highlighting!');
 }
+

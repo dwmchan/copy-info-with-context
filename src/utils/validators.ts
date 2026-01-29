@@ -15,14 +15,14 @@ export interface ValidationResult {
  */
 export function luhnCheck(s: string): boolean {
     const digits = (s || '').toString().replace(/\D/g, '');
-    if (digits.length < 13 || digits.length > 19) return false;
+    if (digits.length < 13 || digits.length > 19) {return false;}
     let sum = 0;
     let doubleNext = false;
     for (let i = digits.length - 1; i >= 0; i--) {
         let d = parseInt(digits[i] ?? '0', 10);
         if (doubleNext) {
             d *= 2;
-            if (d > 9) d -= 9;
+            if (d > 9) {d -= 9;}
         }
         sum += d;
         doubleNext = !doubleNext;
@@ -35,7 +35,7 @@ export function luhnCheck(s: string): boolean {
  */
 export function tfnCheck(s: string): boolean {
     const digits = (s || '').toString().replace(/\D/g, '');
-    if (![8, 9].includes(digits.length)) return false;
+    if (![8, 9].includes(digits.length)) {return false;}
     const weights = digits.length === 8 ? [10, 7, 8, 4, 6, 3, 5, 2] : [1, 4, 3, 7, 5, 8, 6, 9, 10];
     let sum = 0;
     for (let i = 0; i < digits.length; i++) {
@@ -49,7 +49,7 @@ export function tfnCheck(s: string): boolean {
  */
 export function abnCheck(s: string): boolean {
     const digits = (s || '').toString().replace(/\D/g, '');
-    if (digits.length !== 11) return false;
+    if (digits.length !== 11) {return false;}
     const weights = [10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
     let sum = 0;
     const firstAdjusted = parseInt(digits[0] ?? '0', 10) - 1;
@@ -104,7 +104,7 @@ export function validateBirthDate(s: string): ValidationResult {
 
     let age = now.getFullYear() - dt.getFullYear();
     const m = now.getMonth() - dt.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < dt.getDate())) age--;
+    if (m < 0 || (m === 0 && now.getDate() < dt.getDate())) {age--;}
 
     if (age < 0) {
         return { isValid: false, confidence: 0.0, reason: 'Invalid age' };
@@ -124,12 +124,12 @@ export function validateBirthDate(s: string): ValidationResult {
  * Email validator returns object with confidence and helpful reason when low
  */
 export function validateEmail(s: string): ValidationResult {
-    if (!s || typeof s !== 'string') return { isValid: false, confidence: 0.0, reason: 'Empty or invalid' };
+    if (!s || typeof s !== 'string') {return { isValid: false, confidence: 0.0, reason: 'Empty or invalid' };}
     const email = s.trim().toLowerCase();
 
     // basic format check
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!re.test(email)) return { isValid: false, confidence: 0.0, reason: 'Malformed email' };
+    if (!re.test(email)) {return { isValid: false, confidence: 0.0, reason: 'Malformed email' };}
 
     // common "test" / example domains detect
     const domain = email.split('@')[1] ?? '';
@@ -145,11 +145,11 @@ export function validateEmail(s: string): ValidationResult {
  * IBAN check returns boolean for fast inline validation
  */
 export function ibanCheck(s: string): boolean {
-    if (!s || typeof s !== 'string') return false;
+    if (!s || typeof s !== 'string') {return false;}
     const v = s.replace(/\s+/g, '').toUpperCase();
-    if (v.length < 15 || v.length > 34) return false;
+    if (v.length < 15 || v.length > 34) {return false;}
     // country code must be two letters
-    if (!/^[A-Z]{2}/.test(v)) return false;
+    if (!/^[A-Z]{2}/.test(v)) {return false;}
     const rearranged = v.slice(4) + v.slice(0, 4);
     let numeric = '';
     for (let i = 0; i < rearranged.length; i++) {

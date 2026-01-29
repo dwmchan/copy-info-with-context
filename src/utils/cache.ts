@@ -1,11 +1,11 @@
-// Module-level caches
+﻿// Module-level caches
 export const regexEscapeCache = new Map<string, string>();
 export const tagCountCache = new Map<string, number>();
 
 // Helper function to escape regex special characters
 export function escapeRegexSpecialChars(str: string): string {
     if (regexEscapeCache.has(str)) {
-        return regexEscapeCache.get(str)!;
+        const cached = regexEscapeCache.get(str); if (cached !== undefined) { return cached; }
     }
 
     const escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -16,3 +16,4 @@ export function escapeRegexSpecialChars(str: string): string {
 
     return escaped;
 }
+

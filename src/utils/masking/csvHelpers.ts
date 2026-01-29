@@ -1,7 +1,7 @@
 // csvHelpers.ts - CSV/delimited file processing utilities
 // Phase 1 (v1.6.0): Extracted from monolithic maskingEngine.ts
 
-import { MaskingConfig, PiiType } from './config';
+import { MaskingConfig } from './config';
 
 /**
  * Column name patterns that indicate sensitive data
@@ -115,7 +115,7 @@ export function detectDelimiter(sampleLines: string[]): string {
     let bestScore = 0;
 
     for (const [delim, counts] of delimiterCounts.entries()) {
-        if (counts.length === 0) continue;
+        if (counts.length === 0) {continue;}
 
         // Calculate average count
         const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
@@ -145,7 +145,7 @@ export function detectDelimiter(sampleLines: string[]): string {
  * @param delimiter - Delimiter character (default: comma)
  * @returns Array of field values
  */
-export function parseCsvLine(line: string, delimiter: string = ','): string[] {
+export function parseCsvLine(line: string, delimiter = ','): string[] {
     const result: string[] = [];
     let current = '';
     let inQuotes = false;
@@ -219,7 +219,7 @@ export function shouldMaskColumn(columnName: string, config: MaskingConfig): boo
 
     // Check built-in patterns
     for (const [category, patterns] of Object.entries(SENSITIVE_COLUMN_PATTERNS)) {
-        if (config.types[category] === false) continue;
+        if (config.types[category] === false) {continue;}
 
         if (patterns.some(pattern => normalized.includes(pattern.replace(/[_\s-]/g, '')))) {
             return true;
@@ -265,7 +265,7 @@ export function detectColumnType(columnName: string): string {
                 case 'routing': return 'routingNumber';
                 case 'identifier':
                     // Special case: check for NMI specifically
-                    if (normalized.includes('nmi')) return 'nmi';
+                    if (normalized.includes('nmi')) {return 'nmi';}
                     return 'accountNumber';
                 default:
                     return 'custom';
@@ -286,7 +286,7 @@ export function detectColumnType(columnName: string): string {
  * @param delimiter - Delimiter character
  * @returns true if first line appears to be headers
  */
-export function detectHeaders(firstLine: string, secondLine: string | null, delimiter: string = ','): boolean {
+export function detectHeaders(firstLine: string, secondLine: string | null, delimiter = ','): boolean {
     const firstFields = parseCsvLine(firstLine, delimiter);
 
     // If there's no second line, assume first line is headers
@@ -323,7 +323,7 @@ export function getColumnRangeFromSelection(
     line: string,
     startChar: number,
     endChar: number,
-    delimiter: string = ','
+    delimiter = ','
 ): ColumnRange {
     const fields = parseCsvLine(line, delimiter);
 
@@ -333,7 +333,7 @@ export function getColumnRangeFromSelection(
     let found = false;
 
     for (let i = 0; i < fields.length; i++) {
-        const field = fields[i] || '';
+        const field = fields[i] ?? '';
         const fieldStart = currentPos;
         const fieldEnd = currentPos + field.length;
 
@@ -371,10 +371,10 @@ export function buildAsciiTable(
     columnWidths?: number[]
 ): string {
     // Calculate column widths if not provided
-    const widths = columnWidths || headers.map((header, i) => {
+    const widths = columnWidths ?? headers.map((header, i) => {
         const headerLen = header.length;
         const maxDataLen = Math.max(
-            ...rows.map(row => (row[i] || '').toString().length)
+            ...rows.map(row => (row[i] ?? '').toString().length)
         );
         return Math.max(headerLen, maxDataLen, 3); // Minimum width of 3
     });
@@ -408,15 +408,15 @@ export function buildAsciiTable(
         chars.bottomRight;
 
     // Build header row
-    const headerRow = chars.vertical + ' ' +
-        headers.map((h, i) => h.padEnd(widths[i] ?? 0)).join(` ${chars.vertical} `) +
-        ` ${chars.vertical}`;
+    const headerRow = `${chars.vertical  } ${ 
+        headers.map((h, i) => h.padEnd(widths[i] ?? 0)).join(` ${chars.vertical} `) 
+        } ${chars.vertical}`;
 
     // Build data rows
     const dataRows = rows.map(row =>
-        chars.vertical + ' ' +
-        row.map((cell, i) => (cell || '').toString().padEnd(widths[i] ?? 0)).join(` ${chars.vertical} `) +
-        ` ${chars.vertical}`
+        `${chars.vertical  } ${ 
+        row.map((cell, i) => (cell || '').toString().padEnd(widths[i] ?? 0)).join(` ${chars.vertical} `) 
+        } ${chars.vertical}`
     );
 
     // Combine all parts
@@ -443,11 +443,11 @@ export function detectColumnAlignments(rows: string[][]): ColumnAlignment[] {
         return [];
     }
 
-    const numColumns = (rows[0] && rows[0].length) || 0;
+    const numColumns = (rows[0]?.length) ?? 0;
     const alignments: ColumnAlignment[] = [];
 
     for (let col = 0; col < numColumns; col++) {
-        const values = rows.map(row => row[col] || '').filter(v => v.trim().length > 0);
+        const values = rows.map(row => row[col] ?? '').filter(v => v.trim().length > 0);
 
         if (values.length === 0) {
             alignments.push('left');

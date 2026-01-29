@@ -1,4 +1,4 @@
-// maskingEngine.ts - Data Masking Engine for PII Protection (Refactored v1.6.0)
+﻿// maskingEngine.ts - Data Masking Engine for PII Protection (Refactored v1.6.0)
 // Main orchestration layer - imports modular utilities
 import * as vscode from 'vscode';
 
@@ -18,16 +18,12 @@ import {
     DETECTION_PATTERNS,
 
     // Confidence scoring
-    checkStatisticalAnomalies,
     detectStructureType,
     getAdaptiveThreshold,
     calculateMaskingConfidence,
-    isNonBirthDateField,
     isInsideFieldName,
 
     // Validators
-    isBirthDateField,
-    isPlausibleBirthDate,
     shouldMaskAsDateOfBirth,
 
     // Masking functions
@@ -54,10 +50,7 @@ import {
     detectDelimiter,
     parseCsvLine,
     shouldMaskColumn,
-    detectColumnType,
-    detectHeaders,
-    buildAsciiTable,
-    getSensitiveColumnPatterns
+    detectColumnType
 } from './masking';
 
 // Re-export types for backward compatibility
@@ -139,13 +132,13 @@ function maskByFieldName(
     const patternType = detectColumnType(fieldName);
 
     // Check if this pattern type is enabled in config
-    const configKey = patternType as keyof typeof config.types;
+    const configKey = patternType ;
     if (config.types[configKey] === false) {
         return null;
     }
 
     // Get masking function
-    const maskFn = MASKING_FUNCTIONS[patternType] || maskGeneric;
+    const maskFn = MASKING_FUNCTIONS[patternType] ?? maskGeneric;
     return maskFn(value, strategy);
 }
 
@@ -153,7 +146,7 @@ function maskByFieldName(
 // MAIN MASKING ENGINE
 // ============================================================================
 
-export function maskText(text: string, config: MaskingConfig, headers?: string[]): MaskedResult {
+export function maskText(text: string, config: MaskingConfig, _headers?: string[]): MaskedResult {
     if (!config.enabled) {
         return {
             maskedText: text,
@@ -194,14 +187,14 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
     // ========================================================================
 
     // Detect if this is JSON or XML content
-    const isJsonContent = /^\s*[\[{]/.test(text) || /"[^"]+"\s*:/.test(text);
+    const isJsonContent = /^\s*[[{]/.test(text) || /"[^"]+"\s*:/.test(text);
     const isXmlContent = /<[^>]+>/.test(text);
 
     if (isJsonContent || isXmlContent) {
         // Find all potential field values (quoted strings and unquoted values)
         const valuePatterns = [
             /"([^"]+)"\s*:\s*"([^"]+)"/g,       // JSON: "field": "value"
-            /"([^"]+)"\s*:\s*([0-9\s\-]+)/g,   // JSON: "field": 123 or "field": 123-456
+            /"([^"]+)"\s*:\s*([0-9\s-]+)/g,   // JSON: "field": 123 or "field": 123-456
             /<([^>\s/]+)>([^<]+)<\/\1>/g        // XML: <field>value</field>
         ];
 
@@ -214,22 +207,22 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
                 const value = match[2];
 
                 // Skip if field name or value is undefined
-                if (!fieldName || !value) continue;
+                if (!fieldName || !value) {continue;}
 
                 // Skip if already detected
-                if (replacements.has(value)) continue;
+                if (replacements.has(value)) {continue;}
 
                 // Skip if value is empty or just whitespace
-                if (!value.trim()) continue;
+                if (!value.trim()) {continue;}
 
                 // Attempt to mask by field name
                 const maskedValue = maskByFieldName(value, fieldName, effectiveConfig.strategy, effectiveConfig);
 
                 if (maskedValue !== null) {
                     // Calculate position info
-                    const valueIndex = text.indexOf(value, match.index!);
+                    const valueIndex = text.indexOf(value, match.index);
                     const beforeMatch = text.substring(0, valueIndex);
-                    const line = (beforeMatch.match(/\n/g) || []).length + 1;
+                    const line = (beforeMatch.match(/\n/g) ?? []).length + 1;
                     const lastNewline = beforeMatch.lastIndexOf('\n');
                     const column = valueIndex - (lastNewline + 1);
 
@@ -258,23 +251,26 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
     // ========================================================================
 
     // Pattern-based detection - collect all matches first
-    for (const [type, pattern] of Object.entries(DETECTION_PATTERNS)) {
+    for (const type of Object.keys(DETECTION_PATTERNS)) {
         // Check if this pattern type is enabled
-        const configKey = typeMapping[type] || type;
+        const configKey = typeMapping[type] ?? type;
         if (effectiveConfig.types[configKey] === false) {
             continue;
         }
 
         // Get the compiled regex pattern
         const regex = patternFactory.getPattern(type);
-        if (!regex) continue;
+        if (!regex) {continue;}
 
         regex.lastIndex = 0;
         const matches = Array.from(text.matchAll(regex));
 
         for (const match of matches) {
+            if (match.index === undefined) {
+                continue;
+            }
             const originalValue = match[0];
-            const matchIndex = match.index!;
+            const matchIndex = match.index;
 
             // Skip if already detected (from field-name-based detection)
             if (replacements.has(originalValue)) {
@@ -312,7 +308,7 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
             }
 
             // Get masking function
-            const maskFn = MASKING_FUNCTIONS[type] || maskGeneric;
+            const maskFn = MASKING_FUNCTIONS[type] ?? maskGeneric;
             const maskedValue = maskFn(originalValue, effectiveConfig.strategy);
 
             // Store replacement
@@ -320,7 +316,7 @@ export function maskText(text: string, config: MaskingConfig, headers?: string[]
 
             // Calculate line and column
             const beforeMatch = text.substring(0, matchIndex);
-            const line = (beforeMatch.match(/\n/g) || []).length + 1;
+            const line = (beforeMatch.match(/\n/g) ?? []).length + 1;
             const lastNewline = beforeMatch.lastIndexOf('\n');
             const column = matchIndex - (lastNewline + 1);
 
@@ -417,7 +413,7 @@ export function maskCsvText(text: string, config: MaskingConfig, headersLine?: s
     for (let i = dataStartIndex; i < lines.length; i++) {
         const line = lines[i];
         if (!line || line.trim().length === 0) {
-            maskedLines.push(line || '');
+            maskedLines.push(line ?? '');
             continue;
         }
 
@@ -425,13 +421,13 @@ export function maskCsvText(text: string, config: MaskingConfig, headersLine?: s
         const maskedValues: string[] = [];
 
         for (let colIndex = 0; colIndex < values.length; colIndex++) {
-            const value = values[colIndex] || '';
-            const columnName = headers[colIndex] || `Column ${colIndex + 1}`;
+            const value = values[colIndex] ?? '';
+            const columnName = headers[colIndex] ?? `Column ${colIndex + 1}`;
 
             // Check if this column should be masked
             if (shouldMaskColumn(columnName, config)) {
                 const patternType = detectColumnType(columnName);
-                const maskFn = MASKING_FUNCTIONS[patternType] || maskGeneric;
+                const maskFn = MASKING_FUNCTIONS[patternType] ?? maskGeneric;
                 const maskedValue = maskFn(value, config.strategy);
 
                 maskedValues.push(maskedValue);
@@ -481,10 +477,10 @@ export function updateMaskingStatusBar(result: MaskedResult, config: MaskingConf
         return;
     }
 
-    vscode.window.setStatusBarMessage(`🛡️ ${result.detections.length} masked`, 3000);
+    vscode.window.setStatusBarMessage(`ðŸ›¡ï¸ ${result.detections.length} masked`, 3000);
 }
 
-export function showMaskingNotification(result: MaskedResult, config: MaskingConfig): void {
+export function showMaskingNotification(result: MaskedResult, _config: MaskingConfig): void {
     if (!result.maskingApplied) {
         return;
     }
@@ -492,7 +488,7 @@ export function showMaskingNotification(result: MaskedResult, config: MaskingCon
     // Group detections by type
     const typeGroups = new Map<string, number>();
     for (const detection of result.detections) {
-        const count = typeGroups.get(detection.type) || 0;
+        const count = typeGroups.get(detection.type) ?? 0;
         typeGroups.set(detection.type, count + 1);
     }
 
@@ -501,7 +497,7 @@ export function showMaskingNotification(result: MaskedResult, config: MaskingCon
         .map(([type, count]) => `${count} ${type}`)
         .join(', ');
 
-    vscode.window.showInformationMessage(
+    void vscode.window.showInformationMessage(
         `Copied with ${result.detections.length} items masked: ${typeSummary}`
     );
 }
@@ -514,7 +510,7 @@ export function formatOutputWithMaskingStats(output: string, result: MaskedResul
     // Group detections by type
     const typeGroups = new Map<string, number>();
     for (const detection of result.detections) {
-        const count = typeGroups.get(detection.type) || 0;
+        const count = typeGroups.get(detection.type) ?? 0;
         typeGroups.set(detection.type, count + 1);
     }
 
@@ -531,3 +527,5 @@ export function formatOutputWithMaskingStats(output: string, result: MaskedResul
 // ============================================================================
 
 export { shouldMaskColumn };
+
+

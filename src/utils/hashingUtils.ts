@@ -25,11 +25,11 @@ import * as crypto from 'crypto';
 export function generateDeterministicHash(
     value: string,
     salt?: string,
-    truncateLength: number = 8
+    truncateLength = 8
 ): string {
     // Use default salt if not provided (based on a fixed string)
     // In production, this could be workspace-specific or user-configurable
-    const effectiveSalt = salt || 'copy-info-with-context-v1';
+    const effectiveSalt = salt ?? 'copy-info-with-context-v1';
 
     // Create SHA-256 hash
     const hash = crypto
@@ -55,7 +55,7 @@ export function generateDeterministicHash(
  * @param preserveDomain - Whether to preserve actual domain
  * @returns Hashed email
  */
-export function hashEmail(email: string, preserveDomain: boolean = true): string {
+export function hashEmail(email: string, preserveDomain = true): string {
     const parts = email.split('@');
     if (parts.length !== 2 || !parts[0] || !parts[1]) {
         return generateDeterministicHash(email);
@@ -88,7 +88,7 @@ export function hashPhone(phone: string): string {
     // Extract country code if present
     const countryCodeMatch = phone.match(/^\+(\d{1,3})/);
 
-    if (countryCodeMatch && countryCodeMatch[1]) {
+    if (countryCodeMatch?.[1]) {
         const countryCode = countryCodeMatch[1];
         const restOfNumber = phone.substring(countryCodeMatch[0].length).replace(/\D/g, '');
         const hashedNumber = generateDeterministicHash(restOfNumber, 'phone', 10);
@@ -178,13 +178,13 @@ export function hashDateOfBirth(dob: string): string {
     if (parts[0] && parts[0].length === 4) {
         // YYYY-MM-DD
         year = parts[0];
-        const monthDay = `${parts[1] || ''}-${parts[2] || ''}`;
+        const monthDay = `${parts[1] ?? ''}-${parts[2] ?? ''}`;
         const hash = generateDeterministicHash(monthDay, 'dob', 4).toUpperCase();
         return `${year}-${hash}`;
     } else if (parts[2] && parts[2].length === 4) {
         // DD-MM-YYYY
         year = parts[2];
-        const dayMonth = `${parts[0] || ''}-${parts[1] || ''}`;
+        const dayMonth = `${parts[0] ?? ''}-${parts[1] ?? ''}`;
         const hash = generateDeterministicHash(dayMonth, 'dob', 4).toUpperCase();
         return `${hash}-${year}`;
     }
@@ -207,7 +207,7 @@ export function hashAddress(address: string): string {
     // Try to extract postcode (4 digits for AU, 5 for US, etc.)
     const postcodeMatch = address.match(/\b(\d{4,5})\b/);
 
-    if (postcodeMatch && postcodeMatch[1]) {
+    if (postcodeMatch?.[1]) {
         const postcode = postcodeMatch[1];
         const addressWithoutPostcode = address.replace(postcode, '').trim();
         const hash = generateDeterministicHash(addressWithoutPostcode, 'address', 8).toUpperCase();
@@ -226,7 +226,7 @@ export function hashAddress(address: string): string {
  * @param length - Output length
  * @returns Hashed value
  */
-export function hashGeneric(value: string, context: string = 'generic', length: number = 8): string {
+export function hashGeneric(value: string, context = 'generic', length = 8): string {
     return generateDeterministicHash(value, context, length).toUpperCase();
 }
 
@@ -266,7 +266,7 @@ export function hashValue(value: string, format: HashFunctionKey | HashFormat = 
     }
 
     // otherwise treat format as a key into HASH_FUNCTIONS
-    const key = format as HashFunctionKey;
+    const key = format ;
     const fn = HASH_FUNCTIONS[key] ?? HASH_FUNCTIONS.generic;
     return fn(value);
 }
@@ -274,7 +274,7 @@ export function hashValue(value: string, format: HashFunctionKey | HashFormat = 
 // Fix getHashFunction to index safely (avoid TS7053)
 export function getHashFunction(piiType: string): (value: string) => string {
     const key = piiType as keyof typeof HASH_FUNCTIONS;
-    const hashFn = (HASH_FUNCTIONS as Record<string, (v: string) => string>)[key] || HASH_FUNCTIONS['generic'];
+    const hashFn = (HASH_FUNCTIONS as Record<string, (v: string) => string>)[key] ?? HASH_FUNCTIONS['generic'];
     if (!hashFn) {
         return (value: string) => hashGeneric(value);
     }

@@ -57,6 +57,8 @@ function activate(context) {
 }
 exports.activate = activate;
 // Extension deactivation
-function deactivate() { }
+function deactivate() {
+    // No cleanup needed
+}
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map

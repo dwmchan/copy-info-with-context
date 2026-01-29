@@ -426,7 +426,9 @@ describe('getHashFunction Helper', () => {
     });
 
     test('handles null and undefined gracefully', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
         const nullFn = getHashFunction(null as any);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
         const undefinedFn = getHashFunction(undefined as any);
 
         assert.ok(typeof nullFn === 'function', 'Should return function for null');

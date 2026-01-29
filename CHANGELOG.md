@@ -2,6 +2,18 @@
 
 All notable changes to the "Copy Info with Context" extension will be documented in this file.
 
+## [1.6.1] - 2025-12-02
+
+### Fixed
+
+- **CDATA Content Masking:** Fixed issue where PII patterns inside XML CDATA sections were not being masked
+  - Root cause: Adaptive thresholding was treating CDATA content as plain text, increasing confidence threshold and preventing pattern detection
+  - Solution: Added `isInCdata` parameter to `maskText()` function to treat CDATA content as structured data
+  - Impact: All PII types (email, phone, credit card, BSB, TFN, ABN, etc.) now properly detected and masked within CDATA sections
+  - Technical details: When processing CDATA content, effective structure type is set to 'xml' instead of 'plain_text', lowering threshold from 0.85 to 0.6 for better sensitivity
+
+---
+
 ## [1.6.0] - 2025-12-01
 
 ### 🏗️ Major Refactor: Modular Architecture & Performance Optimization

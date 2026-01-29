@@ -11,7 +11,7 @@ import {
 } from '../utils/validators';
 
 describe('Luhn Algorithm (Credit Card Validation)', () => {
-    test('validates correct credit card numbers', () => {
+    void test('validates correct credit card numbers', () => {
         // Valid Visa card
         assert.ok(luhnCheck('4532015112830366'));
         assert.ok(luhnCheck('4532-0151-1283-0366')); // With dashes
@@ -24,7 +24,7 @@ describe('Luhn Algorithm (Credit Card Validation)', () => {
         assert.ok(luhnCheck('374245455400126'));
     });
 
-    test('rejects invalid credit card numbers', () => {
+    void test('rejects invalid credit card numbers', () => {
         // Invalid checksum
         assert.ok(!luhnCheck('4532015112830367'));
         assert.ok(!luhnCheck('5425233430109904'));
@@ -39,7 +39,7 @@ describe('Luhn Algorithm (Credit Card Validation)', () => {
         assert.ok(!luhnCheck(''));
     });
 
-    test('handles various formatting', () => {
+    void test('handles various formatting', () => {
         // All same valid card, different formats
         assert.ok(luhnCheck('4532015112830366'));
         assert.ok(luhnCheck('4532-0151-1283-0366'));
@@ -47,7 +47,7 @@ describe('Luhn Algorithm (Credit Card Validation)', () => {
         assert.ok(luhnCheck('4532.0151.1283.0366'));
     });
 
-    test('rejects sequential and repeated patterns', () => {
+    void test('rejects sequential and repeated patterns', () => {
         // While Luhn might technically pass for some sequential numbers,
         // our statistical anomaly detection would catch these
         assert.ok(!luhnCheck('1234567890123'));
@@ -56,14 +56,14 @@ describe('Luhn Algorithm (Credit Card Validation)', () => {
 });
 
 describe('Australian Tax File Number (TFN) Validation', () => {
-    test('validates correct TFN numbers', () => {
+    void test('validates correct TFN numbers', () => {
         // Valid TFN examples (these pass the checksum algorithm)
         assert.ok(tfnCheck('123456782')); // Valid checksum
         assert.ok(tfnCheck('123 456 782')); // With spaces
         assert.ok(tfnCheck('123-456-782')); // With dashes
     });
 
-    test('rejects invalid TFN numbers', () => {
+    void test('rejects invalid TFN numbers', () => {
         // Invalid checksum
         assert.ok(!tfnCheck('123456789')); // Wrong checksum
 
@@ -75,28 +75,28 @@ describe('Australian Tax File Number (TFN) Validation', () => {
         assert.ok(!tfnCheck(''));
     });
 
-    test('handles TFN formatting variations', () => {
+    void test('handles TFN formatting variations', () => {
         // Same valid TFN, different formats
         assert.ok(tfnCheck('123456782'));
         assert.ok(tfnCheck('123 456 782'));
         assert.ok(tfnCheck('123-456-782'));
     });
 
-    test('rejects sequential patterns', () => {
+    void test('rejects sequential patterns', () => {
         assert.ok(!tfnCheck('123456789')); // Sequential, also fails checksum
         assert.ok(!tfnCheck('111111111')); // Repeated
     });
 });
 
 describe('Australian Business Number (ABN) Validation', () => {
-    test('validates correct ABN numbers', () => {
+    void test('validates correct ABN numbers', () => {
         // Valid ABN examples (these pass the modulo 89 check)
         assert.ok(abnCheck('51824753556')); // Valid ABN
         assert.ok(abnCheck('51 824 753 556')); // With spaces
         assert.ok(abnCheck('51-824-753-556')); // With dashes
     });
 
-    test('rejects invalid ABN numbers', () => {
+    void test('rejects invalid ABN numbers', () => {
         // Invalid checksum
         assert.ok(!abnCheck('51824753557')); // Wrong checksum
 
@@ -108,14 +108,14 @@ describe('Australian Business Number (ABN) Validation', () => {
         assert.ok(!abnCheck(''));
     });
 
-    test('handles ABN formatting variations', () => {
+    void test('handles ABN formatting variations', () => {
         // Same valid ABN, different formats
         assert.ok(abnCheck('51824753556'));
         assert.ok(abnCheck('51 824 753 556'));
         assert.ok(abnCheck('51-824-753-556'));
     });
 
-    test('applies subtract-1-from-first-digit rule correctly', () => {
+    void test('applies subtract-1-from-first-digit rule correctly', () => {
         // ABN algorithm subtracts 1 from first digit before weighting
         // Testing that this is applied correctly
         const validAbn = '51824753556';
@@ -127,7 +127,7 @@ describe('Australian Business Number (ABN) Validation', () => {
 });
 
 describe('Date of Birth Validation', () => {
-    test('validates plausible birth dates (18-120 years)', () => {
+    void test('validates plausible birth dates (18-120 years)', () => {
         // Valid ages (calculated from current year)
         const currentYear = new Date().getFullYear();
 
@@ -143,7 +143,7 @@ describe('Date of Birth Validation', () => {
         assert.ok(validateBirthDate(`${oneHundredTwentyYearsAgo}-01-01`).isValid);
     });
 
-    test('rejects implausible ages', () => {
+    void test('rejects implausible ages', () => {
         const currentYear = new Date().getFullYear();
 
         // Too young (< 18)
@@ -214,7 +214,7 @@ describe('Date of Birth Validation', () => {
 
 describe('Email Validation', () => {
     test('validates real email addresses', () => {
-        assert.ok(validateEmail('john.doe@example.com').isValid);
+        assert.ok(validateEmail('john.doe@company.com').isValid);
         assert.ok(validateEmail('user+tag@domain.co.uk').isValid);
         assert.ok(validateEmail('admin@company.com').isValid);
     });

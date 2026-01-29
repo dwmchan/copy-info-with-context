@@ -224,7 +224,7 @@ class ConfigProcessor {
             showIndicator: config.get('showMaskingIndicator', true),
             includeStats: config.get('includeMaskingStats', false),
             customPatterns: this.processCustomPatterns(
-                config.get('maskingCustomPatterns', []) as any[]
+                (config.get('maskingCustomPatterns', []) as Array<{name?: unknown; pattern?: unknown; replacement?: unknown; enabled?: unknown}>)
             ),
             confidenceThreshold: config.get('maskingConfidenceThreshold', 0.7)
         };
@@ -236,11 +236,11 @@ class ConfigProcessor {
      * @param patterns - Raw custom pattern configuration
      * @returns Processed custom patterns
      */
-    private processCustomPatterns(patterns: any[]): CustomPattern[] {
+    private processCustomPatterns(patterns: Array<{name?: unknown; pattern?: unknown; replacement?: unknown; enabled?: unknown}>): CustomPattern[] {
         return patterns.map(p => ({
-            name: p.name,
-            pattern: typeof p.pattern === 'string' ? new RegExp(p.pattern, 'g') : p.pattern,
-            replacement: p.replacement,
+            name: String(p.name ?? ''),
+            pattern: typeof p.pattern === 'string' ? new RegExp(p.pattern, 'g') : (p.pattern instanceof RegExp ? p.pattern : /.*/),
+            replacement: String(p.replacement ?? ''),
             enabled: p.enabled !== false
         }));
     }
@@ -322,6 +322,6 @@ export function getMaskingConfig(): MaskingConfig {
  * @returns Set of enabled PII type names
  */
 export function getEnabledTypes(config?: MaskingConfig): Set<string> {
-    const effectiveConfig = config || getMaskingConfig();
+    const effectiveConfig = config ?? getMaskingConfig();
     return configProcessor.getEnabledTypes(effectiveConfig);
 }

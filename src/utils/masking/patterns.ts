@@ -1,4 +1,4 @@
-// patterns.ts - Lazy pattern compilation for PII detection
+﻿// patterns.ts - Lazy pattern compilation for PII detection
 // Phase 1 (v1.6.0): Lazy evaluation optimization
 
 /**
@@ -8,7 +8,7 @@
  * we store pattern strings and compile them on-demand when first accessed.
  *
  * Performance Impact:
- * - Module load time: ~40ms → ~1ms (97% faster)
+ * - Module load time: ~40ms â†’ ~1ms (97% faster)
  * - Memory usage: Compiles only patterns actually used
  * - First access: ~1ms overhead for compilation (negligible, one-time cost)
  */
@@ -200,7 +200,7 @@ class PatternFactory {
     getPattern(type: string): RegExp | undefined {
         // Check cache first (O(1) lookup)
         if (this.compiled.has(type)) {
-            return this.compiled.get(type)!;
+            return this.compiled.get(type);
         }
 
         // Compile on first access
@@ -223,7 +223,7 @@ class PatternFactory {
      * This avoids compiling disabled patterns entirely
      *
      * @param enabledTypes - Set of enabled PII type names
-     * @returns Map of type → compiled RegExp for enabled patterns only
+     * @returns Map of type â†’ compiled RegExp for enabled patterns only
      */
     getEnabledPatterns(enabledTypes: Set<string>): Map<string, RegExp> {
         const enabled = new Map<string, RegExp>();
@@ -311,3 +311,4 @@ export const DETECTION_PATTERNS = new Proxy({} as Record<string, RegExp>, {
         return patternFactory.getAllTypes();
     }
 });
+

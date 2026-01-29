@@ -16,7 +16,7 @@ export async function handleCopyWithCustomFormat(): Promise<void> {
         placeHolder: 'Choose output format'
     });
 
-    if (!selected) return;
+    if (!selected) {return;}
 
     switch (selected) {
         case 'Plain Text with Context':

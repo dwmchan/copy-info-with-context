@@ -26,14 +26,14 @@ function getAbsoluteCharPosition(text: string, lineIndex: number, charIndex: num
 }
 
 function detectDelimiter(text: string): string {
-    const firstLine = text.split('\n')[0] || '';
+    const firstLine = text.split('\n')[0] ?? '';
     const delimiters = [',', '\t', '|', ';', ':'];
     
     let maxCount = 0;
     let bestDelimiter = ',';
     
     for (const delimiter of delimiters) {
-        const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+        const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
         if (count > maxCount) {
             maxCount = count;
             bestDelimiter = delimiter;
@@ -80,7 +80,7 @@ function getDelimiterName(delimiter: string): string {
         ':': 'CSV (Colon-Separated)',
         ' ': 'SSV (Space-Separated)'
     };
-    return delimiterNames[delimiter] || 'Delimited';
+    return delimiterNames[delimiter] ?? 'Delimited';
 }
 
 function formatCodeWithLineNumbers(
@@ -118,11 +118,11 @@ function escapeHtml(text: string): string {
 }
 
 // Simplified JSON path detection for testing
-function simpleJsonPathDetection(jsonText: string, line: number, char: number): string | null {
+function simpleJsonPathDetection(jsonText: string, line: number, _char: number): string | null {
     const lines = jsonText.split('\n');
     const targetLine = lines[line];
     
-    if (!targetLine) return null;
+    if (!targetLine) {return null;}
     
     // Simple heuristic-based path detection for testing
     if (targetLine.includes('"name"')) {
@@ -265,7 +265,7 @@ describe('JSON Path Detection', () => {
         assert.equal(arrayElements[targetIndex], 'item3');
         
         const jsonLine = '{"item": "value1"}, {"item": "value2"}, {"item": "value3"}';
-        const commasBefore = (jsonLine.substring(0, jsonLine.lastIndexOf('value3')).match(/},/g) || []).length;
+        const commasBefore = (jsonLine.substring(0, jsonLine.lastIndexOf('value3')).match(/},/g) ?? []).length;
         assert.equal(commasBefore, 2);
     });
 });
@@ -324,7 +324,7 @@ describe('Error Handling', () => {
     test('handles malformed data gracefully', () => {
         // Test CSV parsing with malformed data
         const malformedCsv = 'name,email\n"unclosed quote,test@test.com';
-        const fields = parseDelimitedLine(malformedCsv.split('\n')[1] || '', ',');
+        const fields = parseDelimitedLine(malformedCsv.split('\n')[1] ?? '', ',');
         assert.ok(Array.isArray(fields));
         assert.ok(fields.length > 0);
         
@@ -347,7 +347,7 @@ describe('Error Handling', () => {
 describe('Performance Considerations', () => {
     
     test('handles reasonably large content', () => {
-        const largeContent = 'a'.repeat(10000) + '\n' + 'b'.repeat(10000);
+        const largeContent = `${'a'.repeat(10000)  }\n${  'b'.repeat(10000)}`;
         
         const start = Date.now();
         const position = getAbsoluteCharPosition(largeContent, 1, 5000);

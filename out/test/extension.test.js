@@ -62,13 +62,13 @@ function createMockDocument(content, languageId, fileName) {
     const lines = content.split('\n');
     // Helper function to create TextLine
     const createTextLine = (lineNumber) => {
-        const lineText = lines[lineNumber] || '';
+        const lineText = lines[lineNumber] ?? '';
         const lineStart = new vscode.Position(lineNumber, 0);
         const lineEnd = new vscode.Position(lineNumber, lineText.length);
         const lineRange = new vscode.Range(lineStart, lineEnd);
         const lineRangeIncludingLineBreak = new vscode.Range(lineStart, new vscode.Position(lineNumber, lineText.length + 1));
         return {
-            lineNumber: lineNumber,
+            lineNumber,
             text: lineText,
             range: lineRange,
             rangeIncludingLineBreak: lineRangeIncludingLineBreak,
@@ -78,8 +78,8 @@ function createMockDocument(content, languageId, fileName) {
     };
     return {
         getText: () => content,
-        languageId: languageId,
-        fileName: fileName,
+        languageId,
+        fileName,
         lineAt: ((lineOrPosition) => {
             if (typeof lineOrPosition === 'number') {
                 return createTextLine(lineOrPosition);
@@ -96,24 +96,24 @@ function createMockDocument(content, languageId, fileName) {
         eol: vscode.EndOfLine.LF,
         lineCount: lines.length,
         encoding: 'utf8',
-        save: async () => true,
+        save: () => Promise.resolve(true),
         offsetAt: (position) => {
             let offset = 0;
             for (let i = 0; i < position.line && i < lines.length; i++) {
-                offset += lines[i].length + 1; // +1 for newline
+                offset += (lines[i] ?? '').length + 1; // +1 for newline
             }
             return offset + position.character;
         },
         positionAt: (offset) => {
             let currentOffset = 0;
             for (let line = 0; line < lines.length; line++) {
-                const lineLength = lines[line].length + 1; // +1 for newline
+                const lineLength = (lines[line] ?? '').length + 1; // +1 for newline
                 if (currentOffset + lineLength > offset) {
                     return new vscode.Position(line, offset - currentOffset);
                 }
                 currentOffset += lineLength;
             }
-            return new vscode.Position(lines.length - 1, lines[lines.length - 1]?.length || 0);
+            return new vscode.Position(lines.length - 1, lines[lines.length - 1]?.length ?? 0);
         },
         getWordRangeAtPosition: () => undefined,
         validateRange: (range) => range,
@@ -148,12 +148,12 @@ function createMockDocument(content, languageId, fileName) {
     (0, node_test_1.test)('detectDelimiter identifies correct delimiter', () => {
         // Helper function (copied from extension.ts for testing)
         function detectDelimiter(text) {
-            const firstLine = text.split('\n')[0] || '';
+            const firstLine = text.split('\n')[0] ?? '';
             const delimiters = [',', '\t', '|', ';', ':'];
             let maxCount = 0;
             let bestDelimiter = ',';
             for (const delimiter of delimiters) {
-                const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
+                const count = (firstLine.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
                 if (count > maxCount) {
                     maxCount = count;
                     bestDelimiter = delimiter;
@@ -211,7 +211,7 @@ function createMockDocument(content, languageId, fileName) {
                 ':': 'CSV (Colon-Separated)',
                 ' ': 'SSV (Space-Separated)'
             };
-            return delimiterNames[delimiter] || 'Delimited';
+            return delimiterNames[delimiter] ?? 'Delimited';
         }
         node_assert_1.strict.equal(getDelimiterName(','), 'CSV (Comma-Separated)');
         node_assert_1.strict.equal(getDelimiterName('\t'), 'TSV (Tab-Separated)');
@@ -266,7 +266,7 @@ function createMockDocument(content, languageId, fileName) {
 (0, node_test_1.describe)('JSON Path Detection', () => {
     (0, node_test_1.test)('findJsonPathByPosition detects simple object paths', () => {
         // Simplified version for testing
-        function findJsonPathByPosition(jsonText, line, char) {
+        function findJsonPathByPosition(jsonText, line, _char) {
             // This is a simplified test version - the real implementation is more complex
             if (jsonText.includes('"name"') && line === 2) {
                 return 'users[0].name';
@@ -281,7 +281,6 @@ function createMockDocument(content, languageId, fileName) {
     });
     (0, node_test_1.test)('JSON path handles array indices correctly', () => {
         // Test that we can detect array indices in JSON
-        const jsonWithArrays = '{"items": [{"id": 1}, {"id": 2}, {"id": 3}]}';
         // Mock position at second array element
         // In real implementation, this would use the actual position calculation
         const expectedPath = 'items[1].id';
@@ -297,7 +296,7 @@ function createMockDocument(content, languageId, fileName) {
         // Find line with third Relation element
         let targetLine = -1;
         for (let i = 0; i < xmlLines.length; i++) {
-            if (xmlLines[i].includes('rel3')) {
+            if ((xmlLines[i] ?? '').includes('rel3')) {
                 targetLine = i;
                 break;
             }

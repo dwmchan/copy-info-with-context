@@ -18,7 +18,7 @@ export async function safeExecuteCommand(fn: () => Promise<void>): Promise<void>
         await fn();
     } catch (error) {
         console.error('Command execution error:', error);
-        vscode.window.showErrorMessage(`Copy Info with Context: ${error instanceof Error ?
+        void vscode.window.showErrorMessage(`Copy Info with Context: ${error instanceof Error ?
             error.message : 'Unknown error occurred'}`);
     }
 }

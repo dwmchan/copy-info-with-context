@@ -18,7 +18,7 @@ let maskingStatusBarItem: vscode.StatusBarItem | undefined;
  * @param config - The masking configuration
  */
 export function updateMaskingStatusBar(result: MaskedResult, config: MaskingConfig): void {
-    if (!config.showIndicator) return;
+    if (!config.showIndicator) {return;}
 
     if (!maskingStatusBarItem) {
         maskingStatusBarItem = vscode.window.createStatusBarItem(
@@ -51,11 +51,11 @@ export function updateMaskingStatusBar(result: MaskedResult, config: MaskingConf
  * @param result - The masking result containing detections
  * @param config - The masking configuration
  */
-export function showMaskingNotification(result: MaskedResult, config: MaskingConfig): void {
-    if (result.detections.length === 0) return;
+export function showMaskingNotification(result: MaskedResult, _config: MaskingConfig): void {
+    if (result.detections.length === 0) {return;}
 
     const byType = result.detections.reduce((acc, d) => {
-        acc[d.type] = (acc[d.type] || 0) + 1;
+        acc[d.type] = (acc[d.type] ?? 0) + 1;
         return acc;
     }, {} as Record<PiiType, number>);
 
@@ -63,12 +63,12 @@ export function showMaskingNotification(result: MaskedResult, config: MaskingCon
         .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
         .join(', ');
 
-    vscode.window.showInformationMessage(
+    void vscode.window.showInformationMessage(
         `Copied with ${result.detections.length} item${result.detections.length > 1 ? 's' : ''} masked: ${details}`,
         'Settings'
     ).then(selection => {
         if (selection === 'Settings') {
-            vscode.commands.executeCommand('workbench.action.openSettings', 'copyInfoWithContext.masking');
+            void vscode.commands.executeCommand('workbench.action.openSettings', 'copyInfoWithContext.masking');
         }
     });
 }

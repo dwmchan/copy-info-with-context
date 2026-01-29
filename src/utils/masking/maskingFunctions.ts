@@ -11,12 +11,12 @@ import { hashValue, HashFormat } from '../hashingUtils';
  * @returns Masked value
  */
 export function maskGeneric(value: string, strategy: string): string {
-    if (!value) return '***';
+    if (!value) {return '***';}
 
     switch (strategy) {
         case 'partial':
-            if (value.length <= 3) return '***';
-            return value[0] + '*'.repeat(Math.max(0, value.length - 2)) + value[value.length - 1];
+            if (value.length <= 3) {return '***';}
+            return `${value.charAt(0)}${'*'.repeat(Math.max(0, value.length - 2))}${value.charAt(value.length - 1)}`;
         case 'full':
             return '***';
         case 'structural':
@@ -38,28 +38,28 @@ export function maskGeneric(value: string, strategy: string): string {
  * @returns Masked email
  */
 export function maskEmail(email: string, strategy: string): string {
-    if (!email) return '***';
+    if (!email) {return '***';}
 
     const [localPart, domain] = email.split('@');
-    if (!localPart || !domain) return '***';
+    if (!localPart || !domain) {return '***';}
 
     switch (strategy) {
         case 'partial': {
             const maskedLocal = localPart.length > 2
-                ? localPart[0] + '*'.repeat(Math.max(0, localPart.length - 2)) + localPart[localPart.length - 1]
+                ? `${localPart.charAt(0)}${'*'.repeat(Math.max(0, localPart.length - 2))}${localPart.charAt(localPart.length - 1)}`
                 : '***';
             const domainParts = domain.split('.');
             const maskedDomain = domainParts.length > 1
-                ? (domainParts[0]?.[0] ?? '') + '***.' + domainParts[domainParts.length - 1]
+                ? `${domainParts[0]?.charAt(0) ?? ''}***.${domainParts[domainParts.length - 1] ?? ''}`
                 : '***';
             return `${maskedLocal}@${maskedDomain}`;
         }
         case 'full':
             return '***@***.***';
         case 'structural':
-            return '*'.repeat(localPart.length) + '@' + '*'.repeat(domain.length);
+            return `${'*'.repeat(localPart.length)  }@${  '*'.repeat(domain.length)}`;
         case 'hash':
-            return hashValue(email, HashFormat.BASE64_SHORT) + '@masked.email';
+            return `${hashValue(email, HashFormat.BASE64_SHORT)  }@masked.email`;
         case 'redact':
             return '[EMAIL REDACTED]';
         default:
@@ -75,7 +75,7 @@ export function maskEmail(email: string, strategy: string): string {
  * @returns Masked phone number
  */
 export function maskPhone(phone: string, strategy: string): string {
-    if (!phone) return '***';
+    if (!phone) {return '***';}
 
     // Extract prefix (country code or area code)
     const prefixMatch = phone.match(/^(\+?\d{1,3}[-.\s]?)/);
@@ -85,16 +85,16 @@ export function maskPhone(phone: string, strategy: string): string {
     switch (strategy) {
         case 'partial': {
             const digits = rest.replace(/\D/g, '');
-            if (digits.length <= 2) return prefix + '***';
+            if (digits.length <= 2) {return `${prefix ?? ''}***`;}
             const lastTwo = digits.substring(digits.length - 2);
             const masked = '*'.repeat(Math.max(0, digits.length - 2)) + lastTwo;
-            return prefix + masked;
+            return `${prefix ?? ''}${masked}`;
         }
         case 'full':
             return '***';
         case 'structural': {
             const structuralMask = rest.replace(/\d/g, '*');
-            return prefix + structuralMask;
+            return `${prefix ?? ''}${structuralMask}`;
         }
         case 'hash':
             return hashValue(phone, HashFormat.BASE64_SHORT);
@@ -113,20 +113,20 @@ export function maskPhone(phone: string, strategy: string): string {
  * @returns Masked SSN
  */
 export function maskSSN(ssn: string, strategy: string): string {
-    if (!ssn) return '***';
+    if (!ssn) {return '***';}
 
     switch (strategy) {
         case 'partial': {
             const parts = ssn.split('-');
             if (parts.length === 3) {
-                return '***-**-' + parts[2];
+                return `***-**-${parts[2] ?? ''}`;
             }
             return '***';
         }
         case 'full':
             return '***-**-****';
         case 'structural':
-            return '***-**-****';
+            return '*'.repeat(ssn.length);
         case 'hash':
             return hashValue(ssn, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -144,23 +144,23 @@ export function maskSSN(ssn: string, strategy: string): string {
  * @returns Masked card number
  */
 export function maskCreditCard(cardNumber: string, strategy: string): string {
-    if (!cardNumber) return '***';
+    if (!cardNumber) {return '***';}
 
     switch (strategy) {
         case 'partial': {
             const digits = cardNumber.replace(/\D/g, '');
-            if (digits.length < 4) return '***';
+            if (digits.length < 4) {return '***';}
             const lastFour = digits.substring(digits.length - 4);
             const groups = cardNumber.match(/\d{4}/g);
             if (groups) {
                 return '**** '.repeat(Math.max(0, groups.length - 1)) + lastFour;
             }
-            return '**** **** **** ' + lastFour;
+            return `**** **** **** ${  lastFour}`;
         }
         case 'full':
             return '***';
         case 'structural':
-            return '**** **** **** ****';
+            return '*'.repeat(cardNumber.length);
         case 'hash':
             return hashValue(cardNumber, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -178,14 +178,15 @@ export function maskCreditCard(cardNumber: string, strategy: string): string {
  * @returns Masked address
  */
 export function maskAddress(address: string, strategy: string): string {
-    if (!address) return '***';
+    if (!address) {return '***';}
 
     switch (strategy) {
         case 'partial':
         case 'full':
-        case 'structural':
         case 'redact':
             return '[ADDRESS REDACTED]';
+        case 'structural':
+            return '*'.repeat(address.length);
         case 'hash':
             return hashValue(address, HashFormat.BASE64_SHORT);
         default:
@@ -201,7 +202,7 @@ export function maskAddress(address: string, strategy: string): string {
  * @returns Masked date of birth
  */
 export function maskDateOfBirth(dob: string, strategy: string): string {
-    if (!dob) return '****-**-**';
+    if (!dob) {return '****-**-**';}
 
     // Auto-detect separator
     const separators = ['-', '/', '.', ' '];
@@ -220,11 +221,11 @@ export function maskDateOfBirth(dob: string, strategy: string): string {
         if (parts.length === 3) {
             switch (strategy) {
                 case 'partial':
-                    return `**${separator}***${separator}${parts[2]}`;  // ** *** 1986
+                    return `**${separator}***${separator}${parts[2] ?? ''}`;  // ** *** 1986
                 case 'full':
                     return `**${separator}***${separator}****`;
                 case 'structural':
-                    return `${parts[0]}${separator}***${separator}****`;  // 28 *** ****
+                    return '*'.repeat(dob.length);
                 default:
                     return dob;
             }
@@ -234,7 +235,7 @@ export function maskDateOfBirth(dob: string, strategy: string): string {
     // Handle numeric formats
     const parts = dob.split(separator);
     if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-        return '****' + separator + '**' + separator + '**';
+        return `****${  separator  }**${  separator  }**`;
     }
 
     // Detect format by part lengths
@@ -246,7 +247,7 @@ export function maskDateOfBirth(dob: string, strategy: string): string {
             case 'full':
                 return `****${separator}**${separator}**`;
             case 'structural':
-                return `****${separator}**${separator}${parts[2]}`;  // ****-**-28
+                return '*'.repeat(dob.length);
             default:
                 return dob;
         }
@@ -258,14 +259,14 @@ export function maskDateOfBirth(dob: string, strategy: string): string {
             case 'full':
                 return `**${separator}**${separator}****`;
             case 'structural':
-                return `${parts[0]}${separator}**${separator}****`;  // 28-**-****
+                return '*'.repeat(dob.length);
             default:
                 return dob;
         }
     }
 
     // Unknown format - mask everything
-    return '****' + separator + '**' + separator + '**';
+    return `****${  separator  }**${  separator  }**`;
 }
 
 /**
@@ -276,12 +277,12 @@ export function maskDateOfBirth(dob: string, strategy: string): string {
  * @returns Masked passport number
  */
 export function maskPassport(passport: string, strategy: string): string {
-    if (!passport || passport.length === 0) return '***';
+    if (!passport || passport.length === 0) {return '***';}
 
     switch (strategy) {
         case 'partial':
-            if (passport.length <= 3) return '***';
-            return passport[0] + '*'.repeat(passport.length - 2) + passport[passport.length - 1];
+            if (passport.length <= 3) {return '***';}
+            return `${passport.charAt(0)}${'*'.repeat(passport.length - 2)}${passport.charAt(passport.length - 1)}`;
         case 'full':
             return '***';
         case 'structural':
@@ -303,16 +304,16 @@ export function maskPassport(passport: string, strategy: string): string {
  * @returns Masked license number
  */
 export function maskDriversLicense(license: string, strategy: string): string {
-    if (!license || license.length === 0) return '***';
+    if (!license || license.length === 0) {return '***';}
 
     switch (strategy) {
         case 'partial':
-            if (license.length <= 3) return '***';
-            return license[0] + '*'.repeat(Math.max(0, license.length - 2)) + license[license.length - 1];
+            if (license.length <= 3) {return '***';}
+            return `${license.charAt(0)}${'*'.repeat(Math.max(0, license.length - 2))}${license.charAt(license.length - 1)}`;
         case 'full':
             return '***';
         case 'structural':
-            return license.replace(/[A-Z0-9]/gi, '*');
+            return '*'.repeat(license.length);
         case 'hash':
             return hashValue(license, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -330,16 +331,16 @@ export function maskDriversLicense(license: string, strategy: string): string {
  * @returns Masked national ID
  */
 export function maskNationalID(id: string, strategy: string): string {
-    if (!id || id.length === 0) return '***';
+    if (!id || id.length === 0) {return '***';}
 
     switch (strategy) {
         case 'partial':
-            if (id.length <= 4) return '***';
+            if (id.length <= 4) {return '***';}
             return id.substring(0, 2) + '*'.repeat(Math.max(0, id.length - 4)) + id.substring(id.length - 2);
         case 'full':
             return '***';
         case 'structural':
-            return id.replace(/[A-Z0-9]/gi, '*');
+            return '*'.repeat(id.length);
         case 'hash':
             return hashValue(id, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -357,7 +358,7 @@ export function maskNationalID(id: string, strategy: string): string {
  * @returns Masked BSB
  */
 export function maskAustralianBSB(bsb: string, strategy: string): string {
-    if (!bsb) return '***';
+    if (!bsb) {return '***';}
 
     const separator = bsb.includes('-') ? '-' : (bsb.includes(' ') ? ' ' : '');
 
@@ -365,14 +366,14 @@ export function maskAustralianBSB(bsb: string, strategy: string): string {
         case 'partial': {
             const digits = bsb.replace(/\D/g, '');
             if (digits.length === 6) {
-                return `***${separator}*${digits[5]}${digits.length > 6 ? digits.substring(6) : ''}`;
+                return `***${separator}*${digits.charAt(5)}${digits.length > 6 ? digits.substring(6) : ''}`;
             }
             return '***';
         }
         case 'full':
             return '***';
         case 'structural':
-            return `***${separator}***`;
+            return '*'.repeat(bsb.length);
         case 'hash':
             return hashValue(bsb, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -390,18 +391,18 @@ export function maskAustralianBSB(bsb: string, strategy: string): string {
  * @returns Masked account number
  */
 export function maskAccountNumber(accountNumber: string, strategy: string): string {
-    if (!accountNumber) return '***';
+    if (!accountNumber) {return '***';}
 
     switch (strategy) {
         case 'partial': {
             const digits = accountNumber.replace(/\D/g, '');
-            if (digits.length < 3) return '***';
-            return '***' + digits.substring(digits.length - 3);
+            if (digits.length < 3) {return '***';}
+            return `***${  digits.substring(digits.length - 3)}`;
         }
         case 'full':
             return '***';
         case 'structural':
-            return accountNumber.replace(/\d/g, '*');
+            return '*'.repeat(accountNumber.length);
         case 'hash':
             return hashValue(accountNumber, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -419,14 +420,14 @@ export function maskAccountNumber(accountNumber: string, strategy: string): stri
  * @returns Masked TFN
  */
 export function maskAustralianTFN(tfn: string, strategy: string): string {
-    if (!tfn) return '***';
+    if (!tfn) {return '***';}
 
     switch (strategy) {
         case 'partial':
         case 'full':
             return '*** *** ***';
         case 'structural':
-            return '*** *** ***';
+            return '*'.repeat(tfn.length);
         case 'hash':
             return hashValue(tfn, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -444,14 +445,14 @@ export function maskAustralianTFN(tfn: string, strategy: string): string {
  * @returns Masked ABN
  */
 export function maskAustralianABN(abn: string, strategy: string): string {
-    if (!abn) return '***';
+    if (!abn) {return '***';}
 
     switch (strategy) {
         case 'partial':
         case 'full':
             return '** *** *** ***';
         case 'structural':
-            return '** *** *** ***';
+            return '*'.repeat(abn.length);
         case 'hash':
             return hashValue(abn, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -469,14 +470,14 @@ export function maskAustralianABN(abn: string, strategy: string): string {
  * @returns Masked Medicare number
  */
 export function maskAustralianMedicare(medicare: string, strategy: string): string {
-    if (!medicare) return '***';
+    if (!medicare) {return '***';}
 
     switch (strategy) {
         case 'partial':
         case 'full':
             return '**** ***** *';
         case 'structural':
-            return '**** ***** *';
+            return '*'.repeat(medicare.length);
         case 'hash':
             return hashValue(medicare, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -494,7 +495,7 @@ export function maskAustralianMedicare(medicare: string, strategy: string): stri
  * @returns Masked IP address
  */
 export function maskIPAddress(ip: string, strategy: string): string {
-    if (!ip) return '***';
+    if (!ip) {return '***';}
 
     const isIPv6 = ip.includes(':');
 
@@ -503,12 +504,12 @@ export function maskIPAddress(ip: string, strategy: string): string {
             if (isIPv6) {
                 // IPv6: show first group
                 const parts = ip.split(':');
-                return parts[0] + ':' + '*'.repeat(10);
+                return `${parts[0] ?? ''}:${'*'.repeat(10)}`;
             } else {
                 // IPv4: show first octet
                 const parts = ip.split('.');
                 if (parts.length === 4) {
-                    return parts[0] + '.*.*.*';
+                    return `${parts[0] ?? ''}.*.*.*`;
                 }
             }
             return '***';
@@ -516,7 +517,7 @@ export function maskIPAddress(ip: string, strategy: string): string {
         case 'full':
             return isIPv6 ? '****:****:****:****' : '*.*.*.*';
         case 'structural':
-            return isIPv6 ? ip.replace(/[0-9A-Fa-f]/g, '*') : ip.replace(/\d/g, '*');
+            return '*'.repeat(ip.length);
         case 'hash':
             return hashValue(ip, HashFormat.BASE64_SHORT);
         case 'redact':
@@ -534,12 +535,12 @@ export function maskIPAddress(ip: string, strategy: string): string {
  * @returns Masked IBAN
  */
 export function maskIBAN(iban: string, strategy: string): string {
-    if (!iban) return '***';
+    if (!iban) {return '***';}
 
     switch (strategy) {
         case 'partial': {
             // Show country code and last 4
-            if (iban.length <= 6) return '***';
+            if (iban.length <= 6) {return '***';}
             const countryCode = iban.substring(0, 2);
             const last4 = iban.substring(iban.length - 4);
             return countryCode + '*'.repeat(Math.max(0, iban.length - 6)) + last4;
@@ -565,12 +566,12 @@ export function maskIBAN(iban: string, strategy: string): string {
  * @returns Masked SWIFT code
  */
 export function maskSWIFT(swift: string, strategy: string): string {
-    if (!swift) return '***';
+    if (!swift) {return '***';}
 
     switch (strategy) {
         case 'partial': {
             // Show first 4 (bank code)
-            if (swift.length <= 4) return '***';
+            if (swift.length <= 4) {return '***';}
             return swift.substring(0, 4) + '*'.repeat(Math.max(0, swift.length - 4));
         }
         case 'full':

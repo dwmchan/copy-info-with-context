@@ -59,4 +59,6 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 // Extension deactivation
-export function deactivate(): void {}
+export function deactivate(): void {
+    // No cleanup needed
+}
