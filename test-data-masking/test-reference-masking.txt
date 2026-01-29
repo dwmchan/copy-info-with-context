@@ -1,0 +1,30 @@
+CIB-5616 - CLONE-CPU-1188 CPU-995 - SMS should not be generated for Dishonor 2 - Tetias Goh - Testing
+CIB-5618 - CPU-1193: CPU-890- Policy Certificate generated from OIPA SIT ending with "Integrate Exception" in Virsaic UAT - Lall Goh - UAT
+CIB-5621 - CPU-1223 CPU-915- Renewal letter-LifeSolutions-Incorrect Adviser alert email in the COTE inbox-Clearchoice template used instead of Clearview LifeSolutions - Jason Stacy - UAT
+CIB-5623 - Add PackCodesToSkip for Adviser Email Alerts Activity - Tetias Goh - Testing
+CIB-5624 - Update RecipientSplitter.cs to cater for pack CVW-L-117 where recipientType is not passed in - Tetias Goh - In Progress
+CIB-5625 - CPU-1224 CPU-996 Payment Info Reference [10] not displaying on LAPS2 Reminder Letter for Direct FN paid policy - Claire Bignell - UAT
+CIB-5627 - CPU-1228 CPU-875 - Rollover Benefit Statement - TFN not redacted on the Adviser copy of the RBS - Donald Chan - UAT
+CIB-5629 - CPU-1235 CPU-823- Generic Adhoc Letter-LifeSolutions-Comma separation issue for the person insured - Jason Stacy - UAT
+CIB-5631 - CPU-1229 CPU-823- Generic Adhoc Letter-LifeSolutions-Incorrect Adviser alert email in the COTE inbox-Clearchoice template used instead of Clearview LifeSolutions - Jason Stacy - UAT
+CIB-5634 - CPU-1232 CPU-890:Policy certificate- Benefit type not shown - Jason Stacy - UAT
+CIB-5635 - CPU-1241 CPU-890: Policy certificate: All pack dependencies apart from Print local to be removed - Lall Goh - UAT
+CIB-5636 - CPU-1242 UM-8949: Lapse SMS is triggered incorrectly when policy lapse - Lall Goh - UAT
+CIB-5638 - CPU-1244 CPU-890: Cover letter change - Jason Stacy - UAT
+CIB-5644 - CPU-1276: CPU-890- Policy Certificate letter-Adviser email alert -COTE test inbox-Policy Owner name missing - Jason Stacy - UAT
+CIB-5645 - CPU-1278: CPU-890- Policy Certificate letter-Adviser email alert -COTE test inbox- Person insured- No comma separation between the person insureds - Jason Stacy - UAT
+CIB-5646 - CPU-1281 CPU-996- Multi Insured LAPS1 XML failed with Internal Server error in Virsaic - Jason Stacy - UAT
+CIB-5647 - CPU-1280 CPU-887- Exit Statement-LifeSolutions Super Rollover-"paid by" is displayed instead of "paid for by" in the Tax benefit section - Jason Stacy - UAT
+CIB-5650 - CPU-1286 UM-14882-Lapse letter delivered to COTE inbox is not password protected. - Jason Stacy - UAT
+CIB-5651 - CPU-1289 CPU-916: Missing owner name for direct renewal notice  - Jason Stacy - UAT
+CIB-5652 - CPU-1294 CPU-916: missing HMR reset wording if there is eligible covers - Jason Stacy - UAT
+CIB-5654 - CPU-1293: CVW-L-021: Biller Code on Premium Instalment Notice - Jason Stacy - UAT
+CIB-5655 - CPU-1283: CPU-864-Premium installment notice-Adviser email alert -COTE test inbox- Person insured is blank - Jason Stacy - UAT
+CIB-5656 - CPU-1298 CPU:890- Policy Certificate: Missing covers on policy certificate - Jason Stacy - In Progress
+
+Test cases for reference masking:
+1. Reference: ABC123456 - This SHOULD be masked (has label + code pattern)
+2. Payment Info Reference [10] - This should NOT be masked (descriptive text in ticket)
+3. Invoice No: INV-2024-001 - This SHOULD be masked (clear label + value)
+4. The reference documentation is available - This should NOT be masked (natural language)
+5. Customer Ref: CUS12345 - This SHOULD be masked (label + value pattern)

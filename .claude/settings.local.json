@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run compile:*)",
+      "Bash(npx vsce --version)",
+      "Bash(npx vsce:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(git checkout:*)",
+      "Bash(python match_tickets.py:*)",
+      "Bash(python3:*)",
+      "Bash(node match_tickets.js:*)",
+      "Bash(node find_unmatched.js:*)",
+      "Bash(ls:*)",
+      "Bash(node match_tickets_v6.js:*)",
+      "Bash(node find_unmatched_v6.js:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm test)",
+      "Bash(node -e:*)",
+      "Bash(node ./out/test/runTest.js:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(cat:*)",
+      "Bash(node ./out/test/unit-tests.js:*)",
+      "Bash(node test-masking-verification.js:*)",
+      "Bash(npm test:*)",
+      "Bash(node --test:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node debug-abn.js:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

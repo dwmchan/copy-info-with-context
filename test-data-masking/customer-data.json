@@ -1,0 +1,57 @@
+{
+  "customers": [
+    {
+      "id": "CUST-00012345",
+      "name": "John Anderson",
+      "email": "john.anderson@example.com",
+      "phone": "+61 412 345 678",
+      "address": "123 Main Street, Melbourne VIC 3000",
+      "banking": {
+        "bsb": "123-456",
+        "accountNumber": "987654321",
+        "creditCard": "4532 1234 5678 9010"
+      },
+      "tax": {
+        "tfn": "123 456 789",
+        "abn": "12 345 678 901"
+      }
+    },
+    {
+      "id": "CUST-00067890",
+      "name": "Sarah Mitchell",
+      "email": "sarah.mitchell@company.com",
+      "phone": "0423 456 789",
+      "address": "456 Collins Street, Sydney NSW 2000",
+      "banking": {
+        "bsb": "789-012",
+        "accountNumber": "555123456",
+        "creditCard": "5425 2334 3010 9903"
+      },
+      "tax": {
+        "tfn": "987 654 321",
+        "abn": "98 765 432 109"
+      }
+    },
+    {
+      "id": "CUST-00098765",
+      "name": "Robert Chen",
+      "email": "robert.chen@enterprise.com",
+      "phone": "+61 407 888 999",
+      "address": "789 Queen Street, Brisbane QLD 4000",
+      "banking": {
+        "bsb": "345-678",
+        "accountNumber": "888999777",
+        "creditCard": "3714 4963 5398 431"
+      },
+      "tax": {
+        "tfn": "456 789 123",
+        "abn": "45 678 912 345"
+      }
+    }
+  ],
+  "metadata": {
+    "exportDate": "2025-11-14",
+    "recordCount": 3,
+    "contactEmail": "support@company.com"
+  }
+}

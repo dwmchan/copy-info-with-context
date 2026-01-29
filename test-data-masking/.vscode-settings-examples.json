@@ -1,0 +1,195 @@
+{
+  "// Example 1: Basic Masking (Email and Phone only)": "",
+  "example1": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingPreset": "basic",
+    "copyInfoWithContext.maskingStrategy": "partial",
+    "copyInfoWithContext.showMaskingIndicator": true
+  },
+
+  "// Example 2: Financial Services (Full Banking Protection)": "",
+  "example2": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingPreset": "financial",
+    "copyInfoWithContext.maskingStrategy": "partial",
+    "copyInfoWithContext.maskingDenyList": [
+      "BSB",
+      "Account Number",
+      "Client ID",
+      "Customer Number",
+      "Credit Card"
+    ],
+    "copyInfoWithContext.showMaskingIndicator": true,
+    "copyInfoWithContext.includeMaskingStats": false
+  },
+
+  "// Example 3: Healthcare (Full Masking for Maximum Privacy)": "",
+  "example3": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingPreset": "healthcare",
+    "copyInfoWithContext.maskingStrategy": "full",
+    "copyInfoWithContext.maskingDenyList": [
+      "Patient Name",
+      "Medicare",
+      "Medical Record",
+      "Diagnosis"
+    ],
+    "copyInfoWithContext.showMaskingIndicator": true,
+    "copyInfoWithContext.includeMaskingStats": true
+  },
+
+  "// Example 4: Enterprise (All Patterns + Custom)": "",
+  "example4": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingPreset": "enterprise",
+    "copyInfoWithContext.maskingStrategy": "structural",
+    "copyInfoWithContext.maskingDenyList": [
+      "Email",
+      "Phone",
+      "SSN",
+      "Employee ID"
+    ],
+    "copyInfoWithContext.maskingAllowList": [
+      "Status",
+      "Type",
+      "Category",
+      "Department"
+    ],
+    "copyInfoWithContext.maskingCustomPatterns": [
+      {
+        "name": "Internal Customer ID",
+        "pattern": "CUST-\\d{8}",
+        "replacement": "CUST-########",
+        "enabled": true
+      },
+      {
+        "name": "Employee ID",
+        "pattern": "EMP\\d{6}",
+        "replacement": "EMP######",
+        "enabled": true
+      },
+      {
+        "name": "Internal Transaction ID",
+        "pattern": "TXN-[A-Z0-9]{12}",
+        "replacement": "TXN-************",
+        "enabled": true
+      }
+    ],
+    "copyInfoWithContext.showMaskingIndicator": true,
+    "copyInfoWithContext.includeMaskingStats": true
+  },
+
+  "// Example 5: Custom Configuration (Manual Control)": "",
+  "example5": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingPreset": "custom",
+    "copyInfoWithContext.maskingMode": "manual",
+    "copyInfoWithContext.maskingStrategy": "partial",
+    "copyInfoWithContext.maskingDenyList": [
+      "API Key",
+      "Password",
+      "Secret",
+      "Token",
+      "Credit Card"
+    ],
+    "copyInfoWithContext.maskingTypes": {
+      "email": true,
+      "phone": true,
+      "ssn": false,
+      "creditCard": true,
+      "address": false,
+      "accountNumber": true,
+      "ipAddress": true,
+      "nmi": false,
+      "australianBSB": true,
+      "australianTFN": true,
+      "australianABN": true,
+      "australianMedicare": false,
+      "clientNumber": true,
+      "referenceNumber": false,
+      "policyNumber": false,
+      "transactionID": false,
+      "iban": true,
+      "swift": true,
+      "routingNumber": false,
+      "custom": true
+    },
+    "copyInfoWithContext.maskingCustomPatterns": [
+      {
+        "name": "API Key",
+        "pattern": "sk_live_[A-Za-z0-9]{48}",
+        "replacement": "sk_live_[REDACTED]",
+        "enabled": true
+      },
+      {
+        "name": "SendGrid API Key",
+        "pattern": "SG\\.[A-Za-z0-9_-]{22}\\.[A-Za-z0-9_-]{43}",
+        "replacement": "SG.[REDACTED].[REDACTED]",
+        "enabled": true
+      }
+    ],
+    "copyInfoWithContext.showMaskingIndicator": true,
+    "copyInfoWithContext.includeMaskingStats": true
+  },
+
+  "// Example 6: Strict Mode (High Sensitivity)": "",
+  "example6": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingMode": "strict",
+    "copyInfoWithContext.maskingPreset": "enterprise",
+    "copyInfoWithContext.maskingStrategy": "full",
+    "copyInfoWithContext.showMaskingIndicator": true,
+    "copyInfoWithContext.includeMaskingStats": true
+  },
+
+  "// Example 7: Development Mode (Selective Masking)": "",
+  "example7": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingMode": "manual",
+    "copyInfoWithContext.maskingPreset": "basic",
+    "copyInfoWithContext.maskingStrategy": "partial",
+    "copyInfoWithContext.maskingDenyList": [
+      "Password",
+      "API Key",
+      "Secret",
+      "Token"
+    ],
+    "copyInfoWithContext.maskingAllowList": [
+      "Email",
+      "Name",
+      "ID",
+      "Status"
+    ],
+    "copyInfoWithContext.showMaskingIndicator": false,
+    "copyInfoWithContext.includeMaskingStats": false
+  },
+
+  "// Example 8: CSV-Focused Configuration": "",
+  "example8": {
+    "copyInfoWithContext.enableDataMasking": true,
+    "copyInfoWithContext.maskingPreset": "financial",
+    "copyInfoWithContext.maskingStrategy": "partial",
+    "copyInfoWithContext.csvOutputMode": "table",
+    "copyInfoWithContext.maskingDenyList": [
+      "EmailAddress",
+      "Email",
+      "BSB",
+      "AccountNumber",
+      "Account Number",
+      "CreditCard",
+      "Credit Card",
+      "Phone",
+      "TFN",
+      "ABN",
+      "Medicare"
+    ],
+    "copyInfoWithContext.maskingAllowList": [
+      "Status",
+      "Type",
+      "Category",
+      "ID"
+    ],
+    "copyInfoWithContext.showMaskingIndicator": true,
+    "copyInfoWithContext.includeMaskingStats": true
+  }
+}

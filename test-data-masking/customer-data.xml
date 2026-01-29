@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customers>
+    <customer id="CUST-00012345">
+        <name>John Anderson</name>
+        <email>john.anderson@example.com</email>
+        <phone>+61 412 345 678</phone>
+        <address>123 Main Street, Melbourne VIC 3000</address>
+        <banking>
+            <bsb>123-456</bsb>
+            <accountNumber>987654321</accountNumber>
+            <creditCard>4532 1234 5678 9010</creditCard>
+        </banking>
+        <tax>
+            <tfn>123 456 789</tfn>
+            <abn>12 345 678 901</abn>
+        </tax>
+        <status>Active</status>
+    </customer>
+    <customer id="CUST-00067890">
+        <name>Sarah Mitchell</name>
+        <email>sarah.mitchell@company.com</email>
+        <phone>0423 456 789</phone>
+        <address>456 Collins Street, Sydney NSW 2000</address>
+        <banking>
+            <bsb>789-012</bsb>
+            <accountNumber>555123456</accountNumber>
+            <creditCard>5425 2334 3010 9903</creditCard>
+        </banking>
+        <tax>
+            <tfn>987 654 321</tfn>
+            <abn>98 765 432 109</abn>
+        </tax>
+        <status>Active</status>
+    </customer>
+    <customer id="CUST-00098765">
+        <name>Robert Chen</name>
+        <email>robert.chen@enterprise.com</email>
+        <phone>+61 407 888 999</phone>
+        <address>789 Queen Street, Brisbane QLD 4000</address>
+        <banking>
+            <bsb>345-678</bsb>
+            <accountNumber>888999777</accountNumber>
+            <creditCard>3714 4963 5398 431</creditCard>
+        </banking>
+        <tax>
+            <tfn>456 789 123</tfn>
+            <abn>45 678 912 345</abn>
+        </tax>
+        <status>Inactive</status>
+    </customer>
+</customers>

@@ -1,0 +1,32 @@
+{
+  "// ========================================": "",
+  "// QUICK START: Copy these settings to VS Code": "",
+  "// ========================================": "",
+  "// 1. Press Ctrl+Shift+P (or Cmd+Shift+P on Mac)": "",
+  "// 2. Type 'Preferences: Open User Settings (JSON)'": "",
+  "// 3. Add these settings to your settings.json": "",
+  "// ========================================": "",
+
+  "copyInfoWithContext.enableDataMasking": true,
+  "copyInfoWithContext.maskingPreset": "financial",
+  "copyInfoWithContext.maskingStrategy": "partial",
+  "copyInfoWithContext.showMaskingIndicator": true,
+  "copyInfoWithContext.includeMaskingStats": true,
+
+  "// ========================================": "",
+  "// The settings above will:": "",
+  "// - Enable data masking": "",
+  "// - Use 'financial' preset (banking patterns)": "",
+  "// - Use 'partial' strategy (j***@e***.com)": "",
+  "// - Show status bar indicator when masking": "",
+  "// - Include stats in output": "",
+  "// ========================================": "",
+
+  "// ALTERNATIVE: For testing ALL patterns (enterprise mode)": "",
+  "// Uncomment these and comment out the ones above": "",
+  "// \"copyInfoWithContext.enableDataMasking\": true,": "",
+  "// \"copyInfoWithContext.maskingPreset\": \"enterprise\",": "",
+  "// \"copyInfoWithContext.maskingStrategy\": \"partial\",": "",
+  "// \"copyInfoWithContext.showMaskingIndicator\": true,": "",
+  "// \"copyInfoWithContext.includeMaskingStats\": true": ""
+}

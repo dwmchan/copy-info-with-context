@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testData>
+    <customer>
+        <!-- This SHOULD be masked -->
+        <lifeDateOfBirth>1986-05-28</lifeDateOfBirth>
+        <dateOfBirth>1990-12-15</dateOfBirth>
+        <birthDate>1975-08-22</birthDate>
+
+        <!-- These should NOT be masked (due to exclusions) -->
+        <eligibleServiceDate>2012-06-15</eligibleServiceDate>
+        <serviceStartDate>2020-01-01</serviceStartDate>
+        <serviceEndDate>2025-12-31</serviceEndDate>
+        <effectiveDate>2023-03-15</effectiveDate>
+        <transactionDate>2024-11-17</transactionDate>
+        <createdDate>2024-01-01</createdDate>
+        <modifiedDate>2024-11-15</modifiedDate>
+        <paymentDate>2024-10-31</paymentDate>
+        <expiryDate>2026-12-31</expiryDate>
+        <renewalDate>2025-06-01</renewalDate>
+        <issuedDate>2023-05-10</issuedDate>
+        <financialYearEnd>2024-06-30</financialYearEnd>
+    </customer>
+</testData>

@@ -1,0 +1,386 @@
+<snippet>    <?xml version="1.0" encoding="UTF-8"?>
+<orders>
+    <order id="ORD-001">
+        <description><![CDATA[
+            Customer: Alice Johnson
+            Email: alice.johnson@email.com
+            Phone: +61 412 345 678
+            BSB: 123-456
+            Account: 987654321
+        ]]></description>
+        <total>250.00</total>
+    </order>
+
+    <order id="ORD-002">
+        <description><![CDATA[
+            Name: Bob Smith
+            Contact: bob.smith@company.com
+            Mobile: +61 423 567 890
+            TFN: 123 456 789
+        ]]></description>
+        <total>450.00</total>
+    </order>
+
+    <order id="ORD-003">
+        <description><![CDATA[
+            Customer Information:
+            Name: Robert Chen
+            Email: robert.chen@company.com
+            Phone: +61 407 888 999
+            Credit Card: 4532 1234 5678 9010
+        ]]></description>
+        <bsb>345-678</bsb>
+        <accountNumber>888999777</accountNumber>
+    </order>
+
+    <order id="ORD-004">
+        <customerName>Sarah Mitchell</customerName>
+        <email>sarah.mitchell@enterprise.com</email>
+        <notes><![CDATA[
+            VIP Customer
+            Previous orders: 15
+            Total spent: $12,500
+            Last contact: 2024-01-15
+            Passport: N1234567
+        ]]></notes>
+    </order>
+</orders>
+    </snippet>
+    <result>
+// cdata-test-2.xml:1-46 (orders)
+1: <orders>
+2:     <order id="ORD-001">
+3:         <description><![CDATA[
+4:             Customer: Alice Johnson
+5:             Email: ***********************
+6:             Phone: +61 ******* 678
+7:             BSB: *******
+8:             Account: *********
+9:         ]]></description>
+10:         <total>250.00</total>
+11:     </order>
+12: 
+13:     <order id="ORD-002">
+14:         <description><![CDATA[
+15:             Name: Bob Smith
+16:             Contact: *********************
+17:             Mobile: +61 ******* 890
+18:             TFN: ******* 789
+19:         ]]></description>
+20:         <total>450.00</total>
+21:     </order>
+22: 
+23:     <order id="ORD-003">
+24:         <description><![CDATA[
+25:             Customer Information:
+26:             Name: Robert Chen
+27:             Email: ***********************
+28:             Phone: +61 ******* ****************************: ************** 9010
+29:         ]]></description>
+30:     ***-*8b>345-678</bsb>
+31:         <accountN***777999777</accountNumber>
+32:     </order>
+33: 
+34:     <order id="ORD-004">
+35:         <customerName>Sarah Mitchell</customerName>
+36:         <email>s************l@e***.com</email>
+37:         <notes><![CDATA[
+38:             VIP Customer
+39:             Previous orders: 15
+40:             Total spent: $12,********************* contact: **********
+41:             Passport: ********
+42:         ]]></notes>
+43:     </order>
+44: </orders>
+</result>
+<debug>
+Copy Info with Context extension is now active!
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 185
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            Customer: Alice Johnson
+extensionHostProcess.js:218
+            Email: alice.johnson@email.com
+extensionHostProcess.js:218
+            Phone: +61 412 345 678
+extensionHostProcess.js:218
+            BSB: 123-456
+extensionHostProcess.js:218
+            Account: 987654321
+extensionHostProcess.js:218
+        
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 4
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 185 Masked inner length: 185 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            Customer: Alice Johnson
+extensionHostProcess.js:218
+            Email: ***********************
+extensionHostProcess.js:218
+            Phone: +61 ******* 678
+extensionHostProcess.js:218
+            BSB: *******
+extensionHostProcess.js:218
+     
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 66
+extensionHostProcess.js:218
+  - Original length: 185
+extensionHostProcess.js:218
+  - Masked length: 185
+extensionHostProcess.js:218
+  - Full match: <description><![CDATA[
+extensionHostProcess.js:218
+            Customer: Alice Johnson
+extensionHostProcess.js:218
+            Email: alice.johnson@email.
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 150
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            Name: Bob Smith
+extensionHostProcess.js:218
+            Contact: bob.smith@company.com
+extensionHostProcess.js:218
+            Mobile: +61 423 567 890
+extensionHostProcess.js:218
+            TFN: 123 456 789
+extensionHostProcess.js:218
+        
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 3
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 150 Masked inner length: 150 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            Name: Bob Smith
+extensionHostProcess.js:218
+            Contact: *********************
+extensionHostProcess.js:218
+            Mobile: +61 ******* 890
+extensionHostProcess.js:218
+            TFN: ******* 789
+extensionHostProcess.js:218
+        
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 373
+extensionHostProcess.js:218
+  - Original length: 150
+extensionHostProcess.js:218
+  - Masked length: 150
+extensionHostProcess.js:218
+  - Full match: <description><![CDATA[
+extensionHostProcess.js:218
+            Name: Bob Smith
+extensionHostProcess.js:218
+            Contact: bob.smith@company.com
+extensionHostProcess.js:218
+   
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 202
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            Email: robert.chen@company.com
+extensionHostProcess.js:218
+            Phone: +61 407 888 999
+extensionHostProcess.js:218
+            Credit Card: 4532 1234 5678 9010
+extensionHostProcess.js:218
+      
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 4
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 202 Masked inner length: 202 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            Email: ***********************
+extensionHostProcess.js:218
+            Phone: +61 ******* *******
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 645
+extensionHostProcess.js:218
+  - Original length: 202
+extensionHostProcess.js:218
+  - Masked length: 202
+extensionHostProcess.js:218
+  - Full match: <description><![CDATA[
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+          
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 173
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            VIP Customer
+extensionHostProcess.js:218
+            Previous orders: 15
+extensionHostProcess.js:218
+            Total spent: $12,500
+extensionHostProcess.js:218
+            Last contact: 2024-01-15
+extensionHostProcess.js:218
+            Passport: N1234567
+extensionHostProcess.js:218
+        
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 3
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 173 Masked inner length: 173 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            VIP Customer
+extensionHostProcess.js:218
+            Previous orders: 15
+extensionHostProcess.js:218
+            Total spent: $12,********************* contact: **********
+extensionHostProcess.js:218
+            Passp
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 1117
+extensionHostProcess.js:218
+  - Original length: 173
+extensionHostProcess.js:218
+  - Masked length: 173
+extensionHostProcess.js:218
+  - Full match: <notes><![CDATA[
+extensionHostProcess.js:218
+            VIP Customer
+extensionHostProcess.js:218
+            Previous orders: 15
+extensionHostProcess.js:218
+            Total spent
+extensionHostProcess.js:218
+[Position Replace Debug] Total replacements: 20
+extensionHostProcess.js:218
+[Position Replace Debug] CDATA replacements (length-preserving): 17
+extensionHostProcess.js:218
+[Position Replace Debug] Pattern replacements (may change length): 3
+extensionHostProcess.js:218
+[CDATA Phase] Applying 17 CDATA replacements
+extensionHostProcess.js:218
+[CDATA Replace] index:1207 len:21 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1117 len:173 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:788 len:28 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:780 len:7 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:780 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:777 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:732 len:23 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:645 len:202 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:502 len:7 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:472 len:7 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:425 len:21 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:373 len:150 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:223 len:18 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:202 len:7 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:172 len:7 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:124 len:23 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:66 len:185 (same as masked_len)
+extensionHostProcess.js:218
+[Pattern Phase] Applying 3 pattern replacements
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1054 Adjusted:1054 LengthDiff:-6 CumulativeOffset:-6
+extensionHostProcess.js:218
+[Pattern Replace] Original index:917 Adjusted:911 LengthDiff:-3 CumulativeOffset:-9
+extensionHostProcess.js:218
+[Pattern Replace] Original index:879 Adjusted:870 LengthDiff:-1 CumulativeOffset:-10
+</debug>
+<remaining_issue>
+<description>where the cdata tag is long, some line items are being rolled into the line above and being masked. e.g. Credit Card being masked with Phone Number in ORD-003, and in ORD-004 the Last contact line getting merged into the Total spent line.
+</description>
+<source>
+ <order id="ORD-003">
+        <description><![CDATA[
+            Customer Information:
+            Name: Robert Chen
+            Email: robert.chen@company.com
+            Phone: +61 407 888 999
+            Credit Card: 4532 1234 5678 9010
+        ]]></description>
+        <bsb>345-678</bsb>
+        <accountNumber>888999777</accountNumber>
+    </order>
+
+    <order id="ORD-004">
+        <customerName>Sarah Mitchell</customerName>
+        <email>sarah.mitchell@enterprise.com</email>
+        <notes><![CDATA[
+            VIP Customer
+            Previous orders: 15
+            Total spent: $12,500
+            Last contact: 2024-01-15
+            Passport: N1234567
+        ]]></notes>
+    </order>
+</source>
+<issue>
+23:     <order id="ORD-003">
+24:         <description><![CDATA[
+25:             Customer Information:
+26:             Name: Robert Chen
+27:             Email: ***********************
+28:             Phone: +61 ******* ****************************: ************** 9010
+29:         ]]></description>
+30:     ***-*8b>345-678</bsb>
+31:         <accountN***777999777</accountNumber>
+32:     </order>
+33: 
+34:     <order id="ORD-004">
+35:         <customerName>Sarah Mitchell</customerName>
+36:         <email>s************l@e***.com</email>
+37:         <notes><![CDATA[
+38:             VIP Customer
+39:             Previous orders: 15
+40:             Total spent: $12,********************* contact: **********
+41:             Passport: ********
+42:         ]]></notes>
+43:     </order>
+</issue>
+<issue_description>In ORD-003, the "Credit Card" line is being merged into the "Phone" line, causing incorrect masking, as well as partial masking of accountNumber fieldname. In ORD-004, the "Last contact" line is being merged into the "Total spent" line, also causing incorrect masking.
+</issue_description>
+</remaining_issue>

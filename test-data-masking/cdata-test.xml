@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<orders>
+    <order id="ORD-001">
+        <customerEmail>john.doe@example.com</customerEmail>
+        <notes><![CDATA[Customer phone: 0412 345 678, Email: john.doe@example.com, Address: 123 Main St]]></notes>
+        <bsb>123-456</bsb>
+    </order>
+    <order id="ORD-002">
+        <customerEmail>jane.smith@example.com</customerEmail>
+        <notes><![CDATA[Special instructions: Process by 2024-11-20. Contact at +61 423 456 789]]></notes>
+        <bsb>789-012</bsb>
+    </order>
+    <order id="ORD-003">
+        <description><![CDATA[
+            Customer Information:
+            Name: Robert Chen
+            Email: robert.chen@company.com
+            Phone: +61 407 888 999
+            Credit Card: 4532 1234 5678 9010
+        ]]></description>
+        <bsb>345-678</bsb>
+    </order>
+</orders>

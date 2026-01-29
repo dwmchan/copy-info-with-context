@@ -1,0 +1,25 @@
+<orders>
+    <order id="ORD-003">
+        <description><![CDATA[
+            Customer Information:
+            Name: Robert Chen
+            Email: robert.chen@company.com
+            Phone: +61 407 888 999
+            Credit Card: 4532 1234 5678 9010
+        ]]></description>
+        <bsb>345-678</bsb>
+        <accountNumber>888999777</accountNumber>
+    </order>
+
+    <order id="ORD-004">
+        <customerName>Sarah Mitchell</customerName>
+        <email>sarah.mitchell@enterprise.com</email>
+        <notes><![CDATA[
+            VIP Customer
+            Previous orders: 15
+            Total spent: $12,500
+            Last contact: 2024-01-15
+            Passport: N1234567
+        ]]></notes>
+    </order>
+</orders>

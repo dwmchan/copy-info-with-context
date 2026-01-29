@@ -1,0 +1,6 @@
+PatientName,Email,Phone,MedicareNumber,Address,DateOfBirth
+John Anderson,john.anderson@email.com,0412 345 678,2234 56789 1,123 Main Street Melbourne VIC 3000,1980-05-15
+Sarah Mitchell,sarah.mitchell@email.com,+61 423 456 789,3345 67890 2,456 Collins Street Sydney NSW 2000,1975-08-22
+Michael Chen,michael.chen@email.com,0455 678 901,4456 78901 3,789 Queen Street Brisbane QLD 4000,1992-11-30
+Emma Thompson,emma.thompson@email.com,+61 407 890 123,5567 89012 4,321 Swanston Street Melbourne VIC 3001,1988-03-18
+David Wilson,david.wilson@email.com,0411 234 567,6678 90123 5,654 George Street Sydney NSW 2001,1995-07-07

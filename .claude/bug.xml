@@ -1,0 +1,539 @@
+<context>
+    <issue>Bug still not resolved</issue>
+    <reference_file>C:\Users\donald.chan\Documents\Github\copy-info-with-context\.claude\2612b.md</reference_file>
+    <description>Despite previous attempts, the bug remains unresolved in the latest version of the software.</description>
+    <test_files>
+        <testfile>
+            <file>C:\Users\donald.chan\Documents\Github\copy-info-with-context\test-data-masking\customer-data.json</file>
+            <result>// customer-data.json:1-58 (JSON)
+1: ***345j***********n@e***.com    {
+2:       "id": "CU+61 *******78     "name": "John Anderson",
+3:       "e[ADDRESS REDACTED]
+4:       "phone": "+61 412 345 678",
+5:     ***-*6ess": "123 Main Street, Melbourn***3210",
+6:       "banking": {
+7:         "bsb": "123-456",
+8:         "accountNumber": "987654321",
+9:  *** *6"creditCard": "**** **** ***** *8"
+10:       },
+11:       "tax": {
+12:         "tfn": "*** ****890    "abn": "** *** *** ***"
+13:       }
+14:     },
+15:     {
+16:      s************l@c***.com    "name": "Sarah Mi042*****89  "email": "sarah.mitchell@company.com[ADDRESS REDACTED]     "address": "[ADDRESS REDACTED], Sy***-*2W 2000",
+17:       "banking": {
+18:     ***456: "789-012",
+19:         "accoun542*******10123456",
+20:         "creditCard": "**** **** **** 9*** *4    },
+21:       "tax": {
+22:      *** *2": "*** *** ***",
+23:         "abn": "** *** *** *****765  },
+24:     {
+25:       "id": "CUST-00098765",
+26:       "name": r*********n@e***.coml": "robert.chen@ente+61 *******99   "phone": "+** **[ADDRESS REDACTED] [ADDRESS REDACTED]bane QLD 4000",
+27:       "banking": {
+28:     ***-*8b": "345-678",
+29:         "accountN***777888999777",
+30:         "creditC371*******988431431"
+31:       },
+32:       "tax": {
+33:         "tfn": "*** *** ***",
+34:         "abn": "** *** *** ***"
+35:       }
+36:     }
+37:   ],
+38:   "metadata": {
+39:     "exportDate": "2025-11-14",
+40:     "recordCount": 3,
+41:     "contactEmail": "s*****t@c***.com"
+42:   }
+43: }
+44: 
+            </result>
+            <debug>
+    [Position Replace Debug] Total replacements: 40
+extensionHostProcess.js:218
+[Position Replace Debug] CDATA replacements (length-preserving): 11
+extensionHostProcess.js:218
+[Position Replace Debug] Pattern replacements (may change length): 29
+extensionHostProcess.js:218
+[CDATA Phase] Applying 11 CDATA replacements
+extensionHostProcess.js:218
+[CDATA Replace] index:1269 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1239 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1003 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1000 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:843 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:813 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:752 len:19 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:608 len:18 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:416 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:386 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:325 len:19 (same as masked_len)
+extensionHostProcess.js:218
+[Pattern Phase] Applying 29 pattern replacements
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1395 Adjusted:1395 LengthDiff:-3 CumulativeOffset:-3
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1179 Adjusted:1176 LengthDiff:-4 CumulativeOffset:-7
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1179 Adjusted:1172 LengthDiff:-2 CumulativeOffset:-9
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1144 Adjusted:1135 LengthDiff:-3 CumulativeOffset:-12
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1108 Adjusted:1096 LengthDiff:-1 CumulativeOffset:-13
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1035 Adjusted:1022 LengthDiff:-17 CumulativeOffset:-30
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1035 Adjusted:1005 LengthDiff:2 CumulativeOffset:-28
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1003 Adjusted:975 LengthDiff:-1 CumulativeOffset:-29
+extensionHostProcess.js:218
+[Pattern Replace] Original index:999 Adjusted:970 LengthDiff:-2 CumulativeOffset:-31
+extensionHostProcess.js:218
+[Pattern Replace] Original index:954 Adjusted:923 LengthDiff:-6 CumulativeOffset:-37
+extensionHostProcess.js:218
+[Pattern Replace] Original index:893 Adjusted:856 LengthDiff:-7 CumulativeOffset:-44
+extensionHostProcess.js:218
+[Pattern Replace] Original index:846 Adjusted:802 LengthDiff:-1 CumulativeOffset:-45
+extensionHostProcess.js:218
+[Pattern Replace] Original index:813 Adjusted:768 LengthDiff:-1 CumulativeOffset:-46
+extensionHostProcess.js:218
+[Pattern Replace] Original index:752 Adjusted:706 LengthDiff:-2 CumulativeOffset:-48
+extensionHostProcess.js:218
+[Pattern Replace] Original index:717 Adjusted:669 LengthDiff:-3 CumulativeOffset:-51
+extensionHostProcess.js:218
+[Pattern Replace] Original index:681 Adjusted:630 LengthDiff:-1 CumulativeOffset:-52
+extensionHostProcess.js:218
+[Pattern Replace] Original index:608 Adjusted:556 LengthDiff:-17 CumulativeOffset:-69
+extensionHostProcess.js:218
+[Pattern Replace] Original index:580 Adjusted:511 LengthDiff:-1 CumulativeOffset:-70
+extensionHostProcess.js:218
+[Pattern Replace] Original index:575 Adjusted:505 LengthDiff:-2 CumulativeOffset:-72
+extensionHostProcess.js:218
+[Pattern Replace] Original index:530 Adjusted:458 LengthDiff:-3 CumulativeOffset:-75
+extensionHostProcess.js:218
+[Pattern Replace] Original index:466 Adjusted:391 LengthDiff:-7 CumulativeOffset:-82
+extensionHostProcess.js:218
+[Pattern Replace] Original index:419 Adjusted:337 LengthDiff:-1 CumulativeOffset:-83
+extensionHostProcess.js:218
+[Pattern Replace] Original index:386 Adjusted:303 LengthDiff:-1 CumulativeOffset:-84
+extensionHostProcess.js:218
+[Pattern Replace] Original index:290 Adjusted:206 LengthDiff:-3 CumulativeOffset:-87
+extensionHostProcess.js:218
+[Pattern Replace] Original index:254 Adjusted:167 LengthDiff:-1 CumulativeOffset:-88
+extensionHostProcess.js:218
+[Pattern Replace] Original index:181 Adjusted:93 LengthDiff:-17 CumulativeOffset:-105
+extensionHostProcess.js:218
+[Pattern Replace] Original index:145 Adjusted:40 LengthDiff:-2 CumulativeOffset:-107
+extensionHostProcess.js:218
+[Pattern Replace] Original index:101 Adjusted:-6 LengthDiff:-3 CumulativeOffset:-110
+extensionHostProcess.js:218
+[Pattern Replace] Original index:38 Adjusted:-72 LengthDiff:-7 CumulativeOffset:-117
+extensionHostProcess.js:218
+[Position Replace Debug] Total replacements: 40
+extensionHostProcess.js:218
+[Position Replace Debug] CDATA replacements (length-preserving): 11
+extensionHostProcess.js:218
+[Position Replace Debug] Pattern replacements (may change length): 29
+extensionHostProcess.js:218
+[CDATA Phase] Applying 11 CDATA replacements
+extensionHostProcess.js:218
+[CDATA Replace] index:1269 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1239 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1003 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:1000 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:843 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:813 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:752 len:19 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:608 len:18 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:416 len:14 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:386 len:11 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:325 len:19 (same as masked_len)
+extensionHostProcess.js:218
+[Pattern Phase] Applying 29 pattern replacements
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1395 Adjusted:1395 LengthDiff:-3 CumulativeOffset:-3
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1179 Adjusted:1176 LengthDiff:-4 CumulativeOffset:-7
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1179 Adjusted:1172 LengthDiff:-2 CumulativeOffset:-9
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1144 Adjusted:1135 LengthDiff:-3 CumulativeOffset:-12
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1108 Adjusted:1096 LengthDiff:-1 CumulativeOffset:-13
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1035 Adjusted:1022 LengthDiff:-17 CumulativeOffset:-30
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1035 Adjusted:1005 LengthDiff:2 CumulativeOffset:-28
+extensionHostProcess.js:218
+[Pattern Replace] Original index:1003 Adjusted:975 LengthDiff:-1 CumulativeOffset:-29
+extensionHostProcess.js:218
+[Pattern Replace] Original index:999 Adjusted:970 LengthDiff:-2 CumulativeOffset:-31
+extensionHostProcess.js:218
+[Pattern Replace] Original index:954 Adjusted:923 LengthDiff:-6 CumulativeOffset:-37
+extensionHostProcess.js:218
+[Pattern Replace] Original index:893 Adjusted:856 LengthDiff:-7 CumulativeOffset:-44
+extensionHostProcess.js:218
+[Pattern Replace] Original index:846 Adjusted:802 LengthDiff:-1 CumulativeOffset:-45
+extensionHostProcess.js:218
+[Pattern Replace] Original index:813 Adjusted:768 LengthDiff:-1 CumulativeOffset:-46
+extensionHostProcess.js:218
+[Pattern Replace] Original index:752 Adjusted:706 LengthDiff:-2 CumulativeOffset:-48
+extensionHostProcess.js:218
+[Pattern Replace] Original index:717 Adjusted:669 LengthDiff:-3 CumulativeOffset:-51
+extensionHostProcess.js:218
+[Pattern Replace] Original index:681 Adjusted:630 LengthDiff:-1 CumulativeOffset:-52
+extensionHostProcess.js:218
+[Pattern Replace] Original index:608 Adjusted:556 LengthDiff:-17 CumulativeOffset:-69
+extensionHostProcess.js:218
+[Pattern Replace] Original index:580 Adjusted:511 LengthDiff:-1 CumulativeOffset:-70
+extensionHostProcess.js:218
+[Pattern Replace] Original index:575 Adjusted:505 LengthDiff:-2 CumulativeOffset:-72
+extensionHostProcess.js:218
+[Pattern Replace] Original index:530 Adjusted:458 LengthDiff:-3 CumulativeOffset:-75
+extensionHostProcess.js:218
+[Pattern Replace] Original index:466 Adjusted:391 LengthDiff:-7 CumulativeOffset:-82
+extensionHostProcess.js:218
+[Pattern Replace] Original index:419 Adjusted:337 LengthDiff:-1 CumulativeOffset:-83
+extensionHostProcess.js:218
+[Pattern Replace] Original index:386 Adjusted:303 LengthDiff:-1 CumulativeOffset:-84
+extensionHostProcess.js:218
+[Pattern Replace] Original index:290 Adjusted:206 LengthDiff:-3 CumulativeOffset:-87
+extensionHostProcess.js:218
+[Pattern Replace] Original index:254 Adjusted:167 LengthDiff:-1 CumulativeOffset:-88
+extensionHostProcess.js:218
+[Pattern Replace] Original index:181 Adjusted:93 LengthDiff:-17 CumulativeOffset:-105
+extensionHostProcess.js:218
+[Pattern Replace] Original index:145 Adjusted:40 LengthDiff:-2 CumulativeOffset:-107
+extensionHostProcess.js:218
+[Pattern Replace] Original index:101 Adjusted:-6 LengthDiff:-3 CumulativeOffset:-110
+extensionHostProcess.js:218
+[Pattern Replace] Original index:38 Adjusted:-72 LengthDiff:-7 CumulativeOffset:-117
+            </debug>
+
+        </testfile>
+        <testfile>
+            <file>C:\Users\donald.chan\Documents\Github\copy-info-with-context\test-data-masking\cdata-test.xml</file>
+            <result>
+                // cdata-test.xml:1-23
+1: <?xml version="1.0" encoding="UTF-8"?>
+2: <orders>
+3:     <order id="ORD-001">
+4:         <customerj******e@e***.comle.com</customerEmail>
+5:         <notes><![CDATA[Customer phone: 0412 *******, Email: ********************, Address: ***********]]></notes>
+6:         ***-*63-456</bsb>
+7:     </order>
+8:     <order id="ORD-002">
+9:         <customerEmaij********h@e***.comom</customerEmail>
+10:         <notes><![CDATA[Special instructions: Process by **********. Contact at +61 ******* 789]]></notes>
+11:         <bsb***-*22</bsb>
+12:     </order>
+13:     <order id="ORD-003">
+14:         <description><![CDATA[
+15:             Customer Information:
+16:             Name: Robert Chen
+17:             Email: ***********************
+18:             Phone: +61 ******* ***************************: ************** 9010
+19:         ]]></description>
+20:         <bsb>***-*8</bsb>
+21:     </order>
+22: </orders>
+</result>
+<debug>
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 79
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: Customer phone: 0412 345 678, Email: john.doe@example.com, Address: 123 Main St
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 3
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 79 Masked inner length: 79 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: Customer phone: 0412 *******, Email: ********************, Address: ***********
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 157
+extensionHostProcess.js:218
+  - Original length: 79
+extensionHostProcess.js:218
+  - Masked length: 79
+extensionHostProcess.js:218
+  - Full match: <notes><![CDATA[Customer phone: 0412 345 678, Email: john.doe@example.com, Address: 123 Main St]]></
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 71
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: Special instructions: Process by 2024-11-20. Contact at +61 423 456 789
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 2
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 71 Masked inner length: 71 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: Special instructions: Process by **********. Contact at +61 ******* 789
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 399
+extensionHostProcess.js:218
+  - Original length: 71
+extensionHostProcess.js:218
+  - Masked length: 71
+extensionHostProcess.js:218
+  - Full match: <notes><![CDATA[Special instructions: Process by 2024-11-20. Contact at +61 423 456 789]]></notes>
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 196
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            Email: robert.chen@company.com
+extensionHostProcess.js:218
+            Phone: +61 407 888 999
+extensionHostProcess.js:218
+            Credit Card: 4532 1234 5678 9010
+extensionHostProcess.js:218
+        
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 4
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 196 Masked inner length: 196 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            Email: ***********************
+extensionHostProcess.js:218
+            Phone: +61 ******* ***********
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 577
+extensionHostProcess.js:218
+  - Original length: 196
+extensionHostProcess.js:218
+  - Masked length: 196
+extensionHostProcess.js:218
+  - Full match: <description><![CDATA[
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            E
+extensionHostProcess.js:218
+[CDATA Skip] Pattern match at 661 skipped - within CDATA range
+extensionHostProcess.js:218
+[CDATA Skip] Pattern match at 178 skipped - within CDATA range
+extensionHostProcess.js:218
+2
+[CDATA Skip] Pattern match at 708 skipped - within CDATA range
+extensionHostProcess.js:218
+[CDATA Skip] Pattern match at 705 skipped - within CDATA range
+extensionHostProcess.js:218
+[Position Replace Debug] Total replacements: 8
+extensionHostProcess.js:218
+[Position Replace Debug] CDATA replacements (length-preserving): 3
+extensionHostProcess.js:218
+[Position Replace Debug] Pattern replacements (may change length): 5
+extensionHostProcess.js:218
+[CDATA Phase] Applying 3 CDATA replacements
+extensionHostProcess.js:218
+[CDATA Replace] index:577 len:196 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:399 len:71 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:157 len:79 (same as masked_len)
+extensionHostProcess.js:218
+[Pattern Phase] Applying 5 pattern replacements
+extensionHostProcess.js:218
+[Pattern Replace] Original index:804 Adjusted:804 LengthDiff:-1 CumulativeOffset:-1
+extensionHostProcess.js:218
+[Pattern Replace] Original index:495 Adjusted:494 LengthDiff:-1 CumulativeOffset:-2
+extensionHostProcess.js:218
+[Pattern Replace] Original index:336 Adjusted:334 LengthDiff:-3 CumulativeOffset:-5
+extensionHostProcess.js:218
+[Pattern Replace] Original index:261 Adjusted:256 LengthDiff:-1 CumulativeOffset:-6
+extensionHostProcess.js:218
+[Pattern Replace] Original index:96 Adjusted:90 LengthDiff:-3 CumulativeOffset:-9 
+</debug>
+        </testfile>
+        <testfile>
+            <file>C:\Users\donald.chan\Documents\Github\copy-info-with-context\test-data-masking\cdata-test-3.xml</file>
+            <result>
+// cdata-test-3.xml:1-25 (orders)
+1: <orders>
+2:     <order id="ORD-003">
+3:         <description><![CDATA[
+4:             Customer Information:
+5:             Name: Robert Chen
+6:             Email: ***********************
+7:             Phone: +61 ******* ****************************: ************** 9010
+8:         ]]></description>
+9:     ***-*8b>345-678</bsb>
+10:         <accountN***777999777</accountNumber>
+11:     </order>
+12: 
+13:     <order id="ORD-004">
+14:         <customerName>Sarah Mitchell</customerName>
+15:         <email>s************l@e***.com</email>
+16:         <notes><![CDATA[
+17:             VIP Customer
+18:             Previous orders: 15
+19:             Total spent: $12,********************* contact: **********
+20:             Passport: ********
+21:         ]]></notes>
+22:     </order>
+23: </orders>
+</result>
+<debug>
+    [CDATA Debug] Processing CDATA content with maskCdataContent(), length: 202
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            Email: robert.chen@company.com
+extensionHostProcess.js:218
+            Phone: +61 407 888 999
+extensionHostProcess.js:218
+            Credit Card: 4532 1234 5678 9010
+extensionHostProcess.js:218
+      
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 4
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 202 Masked inner length: 202 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+            Email: ***********************
+extensionHostProcess.js:218
+            Phone: +61 ******* *******
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 66
+extensionHostProcess.js:218
+  - Original length: 202
+extensionHostProcess.js:218
+  - Masked length: 202
+extensionHostProcess.js:218
+  - Full match: <description><![CDATA[
+extensionHostProcess.js:218
+            Customer Information:
+extensionHostProcess.js:218
+            Name: Robert Chen
+extensionHostProcess.js:218
+          
+extensionHostProcess.js:218
+[CDATA Debug] Processing CDATA content with maskCdataContent(), length: 173
+extensionHostProcess.js:218
+[CDATA Debug] First 200 chars: 
+extensionHostProcess.js:218
+            VIP Customer
+extensionHostProcess.js:218
+            Previous orders: 15
+extensionHostProcess.js:218
+            Total spent: $12,500
+extensionHostProcess.js:218
+            Last contact: 2024-01-15
+extensionHostProcess.js:218
+            Passport: N1234567
+extensionHostProcess.js:218
+        
+extensionHostProcess.js:218
+[CDATA Debug] Inner masking result - changed: true detections: 3
+extensionHostProcess.js:218
+[CDATA Debug] Original inner length: 173 Masked inner length: 173 Length diff: 0
+extensionHostProcess.js:218
+[CDATA Debug] Masked first 150 chars: 
+extensionHostProcess.js:218
+            VIP Customer
+extensionHostProcess.js:218
+            Previous orders: 15
+extensionHostProcess.js:218
+            Total spent: $12,********************* contact: **********
+extensionHostProcess.js:218
+            Passp
+extensionHostProcess.js:218
+[CDATA Replace Debug] About to register CDATA replacement:
+extensionHostProcess.js:218
+  - Position in original text: 538
+extensionHostProcess.js:218
+  - Original length: 173
+extensionHostProcess.js:218
+  - Masked length: 173
+extensionHostProcess.js:218
+  - Full match: <notes><![CDATA[
+extensionHostProcess.js:218
+            VIP Customer
+extensionHostProcess.js:218
+            Previous orders: 15
+extensionHostProcess.js:218
+            Total spent
+extensionHostProcess.js:218
+[CDATA Skip] Pattern match at 153 skipped - within CDATA range
+extensionHostProcess.js:218
+2
+[CDATA Skip] Pattern match at 201 skipped - within CDATA range
+extensionHostProcess.js:218
+[CDATA Skip] Pattern match at 198 skipped - within CDATA range
+extensionHostProcess.js:218
+[CDATA Skip] Pattern match at 628 skipped - within CDATA range
+extensionHostProcess.js:218
+[Position Replace Debug] Total replacements: 5
+extensionHostProcess.js:218
+[Position Replace Debug] CDATA replacements (length-preserving): 2
+extensionHostProcess.js:218
+[Position Replace Debug] Pattern replacements (may change length): 3
+extensionHostProcess.js:218
+[CDATA Phase] Applying 2 CDATA replacements
+extensionHostProcess.js:218
+[CDATA Replace] index:538 len:173 (same as masked_len)
+extensionHostProcess.js:218
+[CDATA Replace] index:66 len:202 (same as masked_len)
+extensionHostProcess.js:218
+[Pattern Phase] Applying 3 pattern replacements
+extensionHostProcess.js:218
+[Pattern Replace] Original index:475 Adjusted:475 LengthDiff:-6 CumulativeOffset:-6
+extensionHostProcess.js:218
+[Pattern Replace] Original index:338 Adjusted:332 LengthDiff:-3 CumulativeOffset:-9
+extensionHostProcess.js:218
+[Pattern Replace] Original index:300 Adjusted:291 LengthDiff:-1 CumulativeOffset:-10
+</debug>
+        </testfile>
+    </test_files>
+</context>

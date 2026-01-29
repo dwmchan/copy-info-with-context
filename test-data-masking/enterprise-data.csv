@@ -1,0 +1,6 @@
+EmployeeID,Name,Email,Department,Phone,ABN,CompanyEmail
+EMP001234,Alice Johnson,alice.j@personal.com,Finance,+61 412 345 678,12 345 678 901,alice.johnson@company.com
+EMP002345,Bob Smith,bob.smith@email.com,Engineering,0423 456 789,23 456 789 012,bob.smith@company.com
+EMP003456,Carol Davis,carol.d@webmail.com,Marketing,+61 407 567 890,34 567 890 123,carol.davis@company.com
+EMP004567,Daniel Lee,daniel.lee@mail.com,HR,0455 678 901,45 678 901 234,daniel.lee@company.com
+EMP005678,Eva Martinez,eva.m@email.com,Sales,+61 411 789 012,56 789 012 345,eva.martinez@company.com
