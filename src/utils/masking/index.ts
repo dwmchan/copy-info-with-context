@@ -88,3 +88,26 @@ export {
     updateMaskingStatusBar,
     showMaskingNotification
 } from './ui';
+
+// Presets
+export {
+    PresetDefinition,
+    MASKING_PRESETS,
+    applyPreset
+} from './presets';
+
+// CDATA utilities
+export {
+    maskCdataContent
+} from './cdata';
+
+// CSV masking
+export {
+    maskCsvText
+} from './csv';
+
+// Masking functions (registry)
+export {
+    MASKING_FUNCTIONS
+} from './maskingFunctions';
+

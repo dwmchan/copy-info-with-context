@@ -2,7 +2,7 @@
 // maskingFunctions.ts - Individual masking functions for each PII type
 // Phase 1 (v1.6.0): Extracted from monolithic maskingEngine.ts
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.maskSWIFT = exports.maskIBAN = exports.maskIPAddress = exports.maskAustralianMedicare = exports.maskAustralianABN = exports.maskAustralianTFN = exports.maskAccountNumber = exports.maskAustralianBSB = exports.maskNationalID = exports.maskDriversLicense = exports.maskPassport = exports.maskDateOfBirth = exports.maskAddress = exports.maskCreditCard = exports.maskSSN = exports.maskPhone = exports.maskEmail = exports.maskGeneric = void 0;
+exports.MASKING_FUNCTIONS = exports.maskSWIFT = exports.maskIBAN = exports.maskIPAddress = exports.maskAustralianMedicare = exports.maskAustralianABN = exports.maskAustralianTFN = exports.maskAccountNumber = exports.maskAustralianBSB = exports.maskNationalID = exports.maskDriversLicense = exports.maskPassport = exports.maskDateOfBirth = exports.maskAddress = exports.maskCreditCard = exports.maskSSN = exports.maskPhone = exports.maskEmail = exports.maskGeneric = void 0;
 const hashingUtils_1 = require("../hashingUtils");
 /**
  * Generic masking function for unknown types
@@ -620,4 +620,47 @@ function maskSWIFT(swift, strategy) {
     }
 }
 exports.maskSWIFT = maskSWIFT;
+// ============================================================================
+// MASKING FUNCTION REGISTRY
+// ============================================================================
+exports.MASKING_FUNCTIONS = {
+    email: maskEmail,
+    phone: maskPhone,
+    australianPhone: maskPhone,
+    ssn: maskSSN,
+    dateOfBirth: maskDateOfBirth,
+    passportNumber: maskPassport,
+    driversLicense: maskDriversLicense,
+    nationalID: maskNationalID,
+    australianPassport: maskPassport,
+    australianDriversLicense: maskDriversLicense,
+    usPassport: maskPassport,
+    usDriversLicense: maskDriversLicense,
+    ukPassport: maskPassport,
+    ukDriversLicense: maskDriversLicense,
+    ukNationalInsurance: maskNationalID,
+    euPassport: maskPassport,
+    creditCardVisa: maskCreditCard,
+    creditCardMastercard: maskCreditCard,
+    creditCardAmex: maskCreditCard,
+    creditCardGeneric: maskCreditCard,
+    accountNumber: maskAccountNumber,
+    australianAccountNumber: maskAccountNumber,
+    ipv4: maskIPAddress,
+    ipv6: maskIPAddress,
+    nmi: maskGeneric,
+    address: maskAddress,
+    australianBSB: maskAustralianBSB,
+    australianTFN: maskAustralianTFN,
+    australianABN: maskAustralianABN,
+    australianMedicare: maskGeneric,
+    clientNumber: maskAccountNumber,
+    referenceNumber: maskGeneric,
+    policyNumber: maskGeneric,
+    transactionID: maskGeneric,
+    iban: maskGeneric,
+    swift: maskGeneric,
+    routingNumber: maskGeneric,
+    custom: maskGeneric
+};
 //# sourceMappingURL=maskingFunctions.js.map

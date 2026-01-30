@@ -3,7 +3,7 @@
 // Phase 1 (v1.6.0): Modular architecture
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildAsciiTable = exports.getColumnRangeFromSelection = exports.detectHeaders = exports.detectColumnType = exports.shouldMaskColumn = exports.parseCsvLine = exports.detectDelimiter = exports.maskSWIFT = exports.maskIBAN = exports.maskIPAddress = exports.maskAustralianMedicare = exports.maskAustralianABN = exports.maskAustralianTFN = exports.maskAccountNumber = exports.maskAustralianBSB = exports.maskNationalID = exports.maskDriversLicense = exports.maskPassport = exports.maskDateOfBirth = exports.maskAddress = exports.maskCreditCard = exports.maskSSN = exports.maskPhone = exports.maskEmail = exports.maskGeneric = exports.isValidIPv6 = exports.isValidIPv4 = exports.isValidIBANFormat = exports.isValidBSBFormat = exports.validateAustralianABN = exports.validateAustralianTFN = exports.luhnCheck = exports.isValidPhoneFormat = exports.isValidEmailFormat = exports.shouldMaskAsDateOfBirth = exports.isPlausibleBirthDate = exports.isBirthDateField = exports.isInsideFieldName = exports.isNonBirthDateField = exports.calculateMaskingConfidence = exports.getAdaptiveThreshold = exports.detectStructureType = exports.checkStatisticalAnomalies = exports.DETECTION_PATTERNS = exports.patternFactory = exports.configProcessor = exports.getEnabledTypes = exports.getMaskingConfig = exports.MaskingStrategy = exports.PiiType = void 0;
-exports.showMaskingNotification = exports.updateMaskingStatusBar = exports.getSensitiveColumnPatterns = exports.detectColumnAlignments = void 0;
+exports.MASKING_FUNCTIONS = exports.maskCsvText = exports.maskCdataContent = exports.applyPreset = exports.MASKING_PRESETS = exports.showMaskingNotification = exports.updateMaskingStatusBar = exports.getSensitiveColumnPatterns = exports.detectColumnAlignments = void 0;
 // Configuration and types
 var config_1 = require("./config");
 Object.defineProperty(exports, "PiiType", { enumerable: true, get: function () { return config_1.PiiType; } });
@@ -72,4 +72,17 @@ Object.defineProperty(exports, "getSensitiveColumnPatterns", { enumerable: true,
 var ui_1 = require("./ui");
 Object.defineProperty(exports, "updateMaskingStatusBar", { enumerable: true, get: function () { return ui_1.updateMaskingStatusBar; } });
 Object.defineProperty(exports, "showMaskingNotification", { enumerable: true, get: function () { return ui_1.showMaskingNotification; } });
+// Presets
+var presets_1 = require("./presets");
+Object.defineProperty(exports, "MASKING_PRESETS", { enumerable: true, get: function () { return presets_1.MASKING_PRESETS; } });
+Object.defineProperty(exports, "applyPreset", { enumerable: true, get: function () { return presets_1.applyPreset; } });
+// CDATA utilities
+var cdata_1 = require("./cdata");
+Object.defineProperty(exports, "maskCdataContent", { enumerable: true, get: function () { return cdata_1.maskCdataContent; } });
+// CSV masking
+var csv_1 = require("./csv");
+Object.defineProperty(exports, "maskCsvText", { enumerable: true, get: function () { return csv_1.maskCsvText; } });
+// Masking functions (registry)
+var maskingFunctions_2 = require("./maskingFunctions");
+Object.defineProperty(exports, "MASKING_FUNCTIONS", { enumerable: true, get: function () { return maskingFunctions_2.MASKING_FUNCTIONS; } });
 //# sourceMappingURL=index.js.map

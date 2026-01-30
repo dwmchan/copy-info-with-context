@@ -586,3 +586,50 @@ export function maskSWIFT(swift: string, strategy: string): string {
             return swift;
     }
 }
+
+// ============================================================================
+// MASKING FUNCTION REGISTRY
+// ============================================================================
+
+export const MASKING_FUNCTIONS: Record<string, (value: string, strategy: string) => string> = {
+    email: maskEmail,
+    phone: maskPhone,
+    australianPhone: maskPhone,
+    ssn: maskSSN,
+    dateOfBirth: maskDateOfBirth,
+
+    passportNumber: maskPassport,
+    driversLicense: maskDriversLicense,
+    nationalID: maskNationalID,
+    australianPassport: maskPassport,
+    australianDriversLicense: maskDriversLicense,
+    usPassport: maskPassport,
+    usDriversLicense: maskDriversLicense,
+    ukPassport: maskPassport,
+    ukDriversLicense: maskDriversLicense,
+    ukNationalInsurance: maskNationalID,
+    euPassport: maskPassport,
+
+    creditCardVisa: maskCreditCard,
+    creditCardMastercard: maskCreditCard,
+    creditCardAmex: maskCreditCard,
+    creditCardGeneric: maskCreditCard,
+    accountNumber: maskAccountNumber,
+    australianAccountNumber: maskAccountNumber,
+    ipv4: maskIPAddress,
+    ipv6: maskIPAddress,
+    nmi: maskGeneric,
+    address: maskAddress,
+    australianBSB: maskAustralianBSB,
+    australianTFN: maskAustralianTFN,
+    australianABN: maskAustralianABN,
+    australianMedicare: maskGeneric,
+    clientNumber: maskAccountNumber,
+    referenceNumber: maskGeneric,
+    policyNumber: maskGeneric,
+    transactionID: maskGeneric,
+    iban: maskGeneric,
+    swift: maskGeneric,
+    routingNumber: maskGeneric,
+    custom: maskGeneric
+};

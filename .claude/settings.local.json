@@ -27,7 +27,8 @@
       "Bash(npx tsx:*)",
       "Bash(node debug-abn.js:*)",
       "Bash(npm run lint:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(sort:*)"
     ],
     "deny": [],
     "ask": []
