@@ -107,7 +107,11 @@ export function alignCsvLinesToLeftmostColumn(
 
 // Main copy handler
 export async function handleCopyWithContext(): Promise<void> {
-    const editor = vscode.window.activeTextEditor!;
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        void vscode.window.showInformationMessage('No active editor');
+        return;
+    }
     const document = editor.document;
     const selection = editor.selection;
 
@@ -211,7 +215,7 @@ export async function handleCopyWithContext(): Promise<void> {
                 try {
                     const fullLine = document.lineAt(startLine - 1).text;
                     const selectionStart = selection.start.character;
-                    const firstChar = lines[0]!.charAt(0);
+                    const firstChar = (lines[0] ?? '').charAt(0);
                     const startsWithPartialField = firstChar !== delimiter && firstChar !== '"' && firstChar !== "'";
 
                     // Count delimiters before selection
@@ -241,7 +245,7 @@ export async function handleCopyWithContext(): Promise<void> {
 
                         const lineBeforeSelection = lineFullText.substring(0, lineSelStart);
                         const lineDelimiterCount = (lineBeforeSelection.match(new RegExp(`\\${delimiter}`, 'g')) ?? []).length;
-                        const lineFirstChar = lines[i]!.charAt(0);
+                        const lineFirstChar = (lines[i] ?? '').charAt(0);
                         const lineStartsPartial = lineFirstChar !== delimiter && lineFirstChar !== '"' && lineFirstChar !== "'";
                         lineColumnStarts.push(lineStartsPartial ? lineDelimiterCount + 1 : lineDelimiterCount);
                     }

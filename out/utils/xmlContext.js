@@ -178,8 +178,9 @@ function countTotalSiblingsInScope(xmlText, tagName, targetDepth, targetPosition
 exports.countTotalSiblingsInScope = countTotalSiblingsInScope;
 function getTagCountInDocument(text, tagName) {
     const cacheKey = `${text.length}-${tagName}`;
-    if (cache_1.tagCountCache.has(cacheKey)) {
-        return cache_1.tagCountCache.get(cacheKey);
+    const cached = cache_1.tagCountCache.get(cacheKey);
+    if (cached !== undefined) {
+        return cached;
     }
     const escapedTagName = (0, cache_1.escapeRegexSpecialChars)(tagName);
     const matches = text.match(new RegExp(`<\\b${escapedTagName}\\b[^>]*>`, 'g'));

@@ -93,7 +93,7 @@ function findJsonPathByPosition(jsonText, position) {
                 case ':':
                     if (currentKey && contextStack.length > 0) {
                         const currentContext = contextStack[contextStack.length - 1];
-                        if (currentContext.type === 'object') {
+                        if (currentContext && currentContext.type === 'object') {
                             if (i < targetPosition) {
                                 currentContext.key = currentKey;
                             }
@@ -105,10 +105,10 @@ function findJsonPathByPosition(jsonText, position) {
                     expectingValue = false;
                     if (contextStack.length > 0) {
                         const currentContext = contextStack[contextStack.length - 1];
-                        if (currentContext.type === 'array') {
+                        if (currentContext && currentContext.type === 'array') {
                             currentContext.arrayIndex = (currentContext.arrayIndex ?? 0) + 1;
                         }
-                        else if (currentContext.type === 'object') {
+                        else if (currentContext && currentContext.type === 'object') {
                             if (i < targetPosition) {
                                 delete currentContext.key;
                             }
@@ -126,7 +126,7 @@ function findJsonPathByPosition(jsonText, position) {
                         if (targetPosition >= keyStartPosition && targetPosition <= i) {
                             if (contextStack.length > 0) {
                                 const currentContext = contextStack[contextStack.length - 1];
-                                if (currentContext.type === 'object') {
+                                if (currentContext && currentContext.type === 'object') {
                                     currentContext.key = currentKey;
                                 }
                             }

@@ -101,8 +101,8 @@ export function findJsonPathByPosition(jsonText: string, position: vscode.Positi
 
                 case ':':
                     if (currentKey && contextStack.length > 0) {
-                        const currentContext = contextStack[contextStack.length - 1]!;
-                        if (currentContext.type === 'object') {
+                        const currentContext = contextStack[contextStack.length - 1];
+                        if (currentContext && currentContext.type === 'object') {
                             if (i < targetPosition) {
                                 currentContext.key = currentKey;
                             }
@@ -115,11 +115,11 @@ export function findJsonPathByPosition(jsonText: string, position: vscode.Positi
                     expectingValue = false;
 
                     if (contextStack.length > 0) {
-                        const currentContext = contextStack[contextStack.length - 1]!;
+                        const currentContext = contextStack[contextStack.length - 1];
 
-                        if (currentContext.type === 'array') {
+                        if (currentContext && currentContext.type === 'array') {
                             currentContext.arrayIndex = (currentContext.arrayIndex ?? 0) + 1;
-                        } else if (currentContext.type === 'object') {
+                        } else if (currentContext && currentContext.type === 'object') {
                             if (i < targetPosition) {
                                 delete currentContext.key;
                             }
@@ -138,8 +138,8 @@ export function findJsonPathByPosition(jsonText: string, position: vscode.Positi
                     if (!expectingValue && currentKey && keyStartPosition >= 0) {
                         if (targetPosition >= keyStartPosition && targetPosition <= i) {
                             if (contextStack.length > 0) {
-                                const currentContext = contextStack[contextStack.length - 1]!;
-                                if (currentContext.type === 'object') {
+                                const currentContext = contextStack[contextStack.length - 1];
+                                if (currentContext && currentContext.type === 'object') {
                                     currentContext.key = currentKey;
                                 }
                             }

@@ -202,8 +202,9 @@ export function countTotalSiblingsInScope(xmlText: string, tagName: string, targ
 export function getTagCountInDocument(text: string, tagName: string): number {
     const cacheKey = `${text.length}-${tagName}`;
 
-    if (tagCountCache.has(cacheKey)) {
-        return tagCountCache.get(cacheKey)!;
+    const cached = tagCountCache.get(cacheKey);
+    if (cached !== undefined) {
+        return cached;
     }
 
     const escapedTagName = escapeRegexSpecialChars(tagName);

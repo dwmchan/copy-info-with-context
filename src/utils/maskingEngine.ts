@@ -1,6 +1,5 @@
 ﻿// maskingEngine.ts - Data Masking Engine for PII Protection (Refactored v1.6.0)
 // Main orchestration layer - imports modular utilities
-import * as vscode from 'vscode';
 
 // Import all masking utilities from modular exports
 import {
@@ -27,23 +26,8 @@ import {
 
     // Masking functions
     maskGeneric,
-    maskEmail,
-    maskPhone,
-    maskSSN,
-    maskCreditCard,
-    maskAddress,
-    maskDateOfBirth,
-    maskPassport,
-    maskDriversLicense,
-    maskNationalID,
-    maskAustralianBSB,
-    maskAccountNumber,
-    maskAustralianTFN,
-    maskAustralianABN,
-    maskIPAddress,
 
     // CSV utilities
-    parseCsvLine,
     shouldMaskColumn,
     detectColumnType,
 
@@ -57,12 +41,10 @@ import {
     maskCsvText,
 
     // CDATA utilities
-    maskCdataContent,
-
-    // UI functions
-    updateMaskingStatusBar,
-    showMaskingNotification
+    maskCdataContent
 } from './masking';
+
+import { updateMaskingStatusBar, showMaskingNotification } from './masking/ui';
 
 // Re-export types for backward compatibility
 export {
@@ -73,10 +55,10 @@ export {
     CustomPattern,
     MaskingConfig,
     getMaskingConfig,
-    maskCsvText,
-    updateMaskingStatusBar,
-    showMaskingNotification
+    maskCsvText
 };
+
+export { updateMaskingStatusBar, showMaskingNotification } from './masking/ui';
 
 // ============================================================================
 // MAIN MASKING ENGINE

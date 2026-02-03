@@ -28,7 +28,8 @@
       "Bash(node debug-abn.js:*)",
       "Bash(npm run lint:*)",
       "Bash(npx eslint:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(Test-Path out)"
     ],
     "deny": [],
     "ask": []

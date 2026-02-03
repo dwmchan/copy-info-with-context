@@ -94,7 +94,7 @@ function detectDelimiter(sampleLines) {
                     count++;
                 }
             }
-            delimiterCounts.get(delim).push(count);
+            delimiterCounts.get(delim)?.push(count);
         }
     }
     // Find delimiter with most consistent count across lines (best candidate)

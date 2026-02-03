@@ -4,6 +4,8 @@
 import * as vscode from 'vscode';
 import { MaskedResult, MaskingConfig, PiiType } from './config';
 
+
+
 /**
  * Status bar item for showing masking status
  * Singleton instance managed by updateMaskingStatusBar()

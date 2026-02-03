@@ -4,7 +4,7 @@
 import { MaskingConfig, MaskedResult, Detection, PiiType } from './config';
 import { parseCsvLine, shouldMaskColumn, detectColumnType } from './csvHelpers';
 import { applyPreset } from './presets';
-import { maskGeneric, MASKING_FUNCTIONS } from '.';
+import { maskGeneric, MASKING_FUNCTIONS } from './maskingFunctions';
 
 /**
  * Mask sensitive data in CSV text with column-aware detection

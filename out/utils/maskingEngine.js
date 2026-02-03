@@ -1,4 +1,6 @@
 "use strict";
+// maskingEngine.ts - Data Masking Engine for PII Protection (Refactored v1.6.0)
+// Main orchestration layer - imports modular utilities
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.shouldMaskColumn = exports.formatOutputWithMaskingStats = exports.maskText = exports.showMaskingNotification = exports.updateMaskingStatusBar = exports.maskCsvText = exports.getMaskingConfig = exports.MaskingStrategy = exports.PiiType = void 0;
 // Import all masking utilities from modular exports
@@ -8,14 +10,15 @@ Object.defineProperty(exports, "PiiType", { enumerable: true, get: function () {
     masking_1.PiiType; } });
 Object.defineProperty(exports, "MaskingStrategy", { enumerable: true, get: function () { return masking_1.MaskingStrategy; } });
 Object.defineProperty(exports, "getMaskingConfig", { enumerable: true, get: function () { return masking_1.getMaskingConfig; } });
-Object.defineProperty(exports, "shouldMaskColumn", { enumerable: true, get: function () { return masking_1.shouldMaskColumn; } });
+Object.defineProperty(exports, "shouldMaskColumn", { enumerable: true, get: function () { return 
+    // CSV utilities
+    masking_1.shouldMaskColumn; } });
 Object.defineProperty(exports, "maskCsvText", { enumerable: true, get: function () { return 
     // CSV masking
     masking_1.maskCsvText; } });
-Object.defineProperty(exports, "updateMaskingStatusBar", { enumerable: true, get: function () { return 
-    // UI functions
-    masking_1.updateMaskingStatusBar; } });
-Object.defineProperty(exports, "showMaskingNotification", { enumerable: true, get: function () { return masking_1.showMaskingNotification; } });
+var ui_1 = require("./masking/ui");
+Object.defineProperty(exports, "updateMaskingStatusBar", { enumerable: true, get: function () { return ui_1.updateMaskingStatusBar; } });
+Object.defineProperty(exports, "showMaskingNotification", { enumerable: true, get: function () { return ui_1.showMaskingNotification; } });
 // ============================================================================
 // MAIN MASKING ENGINE
 // ============================================================================

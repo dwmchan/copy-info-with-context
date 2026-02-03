@@ -106,7 +106,7 @@ export function detectDelimiter(sampleLines: string[]): string {
                 }
             }
 
-            delimiterCounts.get(delim)!.push(count);
+            delimiterCounts.get(delim)?.push(count);
         }
     }
 

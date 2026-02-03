@@ -499,8 +499,7 @@
     "test": "npm run compile && node ./out/test/runTest.js",
     "package": "vsce package",
     "publish": "vsce publish"
-  },
-  "devDependencies": {
+  },  "testRunner": "Compiles TypeScript test files to ./out/test and runs the compiled entrypoint ./out/test/runTest.js (src/test/runTest.ts is the canonical test entry). Use `npm test` to compile and execute tests.",  "devDependencies": {
     "@types/glob": "^8.0.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",

@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.maskCsvText = void 0;
 const csvHelpers_1 = require("./csvHelpers");
 const presets_1 = require("./presets");
-const _1 = require(".");
+const maskingFunctions_1 = require("./maskingFunctions");
 /**
  * Mask sensitive data in CSV text with column-aware detection
  * Detects column headers and masks entire columns based on column names
@@ -50,7 +50,7 @@ function maskCsvText(text, config, headersLine) {
             const header = headers[colIdx] ?? '';
             if (maskColumns[colIdx] && value.trim()) {
                 const columnType = (0, csvHelpers_1.detectColumnType)(header);
-                const maskFn = _1.MASKING_FUNCTIONS[columnType] ?? _1.maskGeneric;
+                const maskFn = maskingFunctions_1.MASKING_FUNCTIONS[columnType] ?? maskingFunctions_1.maskGeneric;
                 const maskedValue = maskFn(value, effectiveConfig.strategy);
                 maskedValues.push(maskedValue);
                 allDetections.push({

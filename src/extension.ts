@@ -11,6 +11,7 @@ import { safeExecuteCommand } from './utils/safeExecution';
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Copy Info with Context extension is now active!');
 
+
     // Register copy with context command
     const copyCommand = vscode.commands.registerCommand(
         'copyInfoWithContext.copySelection',

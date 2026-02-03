@@ -96,6 +96,8 @@ npm run compile
 npm test
 ```
 
+**Note on the test runner:** The project's tests are written in TypeScript and compiled to JavaScript under `out/test`. The test entrypoint is `src/test/runTest.ts`, which imports the individual test suites; the `test` script runs `npm run compile` and then executes `node ./out/test/runTest.js`. Keep `src/test/runTest.ts` as the canonical place to add new test suites.
+
 ## Contributing
 
 Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md).
