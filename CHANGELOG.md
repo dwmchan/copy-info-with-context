@@ -2,6 +2,24 @@
 
 All notable changes to the "Copy Info with Context" extension will be documented in this file.
 
+## [1.6.2] - 2026-02-24
+
+### Fixed
+
+- **CDATA Line Merging:** Fixed issue where patterns using `\s` (BSB, TFN, ABN, Medicare, phone, credit card) could match across newlines inside CDATA sections, causing adjacent lines to be merged when replaced with same-length asterisks
+  - Root cause: Regex patterns with `\s` character class matched `\n`, and replacing a multi-line match with `'*'.repeat(length)` collapsed the newline into asterisks
+  - Solution: Added guard in `maskCdataContent()` to skip any match whose value contains a `\n` character
+  - File: `src/utils/masking/cdata.ts`
+
+- **Outer XML Tag Corruption After CDATA Masking:** Fixed XML structure corruption where outer element tags were corrupted (e.g., `***-*8b>345-678</bsb>`) when the file contained CDATA sections alongside regular XML elements with length-changing masks
+  - Root cause: The descending-order `patternReplacements` loop incorrectly accumulated `cumulativeOffset` from higher-index replacements and applied it to lower-index ones. In descending order, each replacement only affects text at/after its own position, so offset must not be carried forward
+  - Solution: Removed `cumulativeOffset` tracking from the descending `patternReplacements` loop; each replacement now uses its original index directly
+  - File: `src/utils/maskingEngine.ts`
+
+- **Debug Logging Cleanup:** Removed diagnostic `console.log` statements from `maskingEngine.ts` that were left in from CDATA debugging
+
+---
+
 ## [1.6.1] - 2025-12-02
 
 ### Fixed

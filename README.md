@@ -60,6 +60,12 @@ See [Usage Examples](./GUIDE-DATA-MASKING.md#usage-examples) for details.
 
 ## Key Features in Latest Version
 
+### 🐛 v1.6.2: CDATA Masking Bug Fixes
+
+- Fixed CDATA line merging caused by `\s`-based patterns (BSB, TFN, phone, etc.) matching across newlines inside CDATA sections.
+- Fixed outer XML tag corruption that occurred when length-changing masks were applied alongside CDATA replacements.
+- [See full details in CHANGELOG.md](./CHANGELOG.md#162---2026-02-24)
+
 ### 🏗️ v1.6.0: Modular Architecture & Performance Optimization
 
 - Monolithic masking engine split into 8 focused modules for maintainability, speed, and testability.

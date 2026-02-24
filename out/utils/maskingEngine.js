@@ -32,12 +32,6 @@ function maskText(text, config, headers, isInCdata) {
     }
     // Apply preset configuration
     const effectiveConfig = (0, masking_1.applyPreset)(config);
-    if (isInCdata) {
-        console.log('[CDATA Config Debug] enabled:', effectiveConfig.enabled);
-        console.log('[CDATA Config Debug] types.email:', effectiveConfig.types['email']);
-        console.log('[CDATA Config Debug] types.phone:', effectiveConfig.types['phone']);
-        console.log('[CDATA Config Debug] types.australianBSB:', effectiveConfig.types['australianBSB']);
-    }
     const detections = [];
     const replacements = new Map();
     const positionReplacements = [];
@@ -268,14 +262,10 @@ function maskText(text, config, headers, isInCdata) {
         maskedText = before + replacement.maskedValue + after;
     }
     const sortedPatternReplacements = patternReplacements.sort((a, b) => b.index - a.index);
-    let cumulativeOffset = 0;
     for (const replacement of sortedPatternReplacements) {
-        const adjustedIndex = replacement.index + cumulativeOffset;
-        const before = maskedText.substring(0, adjustedIndex);
-        const after = maskedText.substring(adjustedIndex + replacement.length);
+        const before = maskedText.substring(0, replacement.index);
+        const after = maskedText.substring(replacement.index + replacement.length);
         maskedText = before + replacement.maskedValue + after;
-        const lengthDiff = replacement.maskedValue.length - replacement.length;
-        cumulativeOffset += lengthDiff;
     }
     return {
         maskedText,

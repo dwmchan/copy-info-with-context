@@ -47,6 +47,13 @@ export function maskCdataContent(cdataContent: string, config: MaskingConfig): {
             if (!match.index) {continue;}
 
             const originalValue = match[0];
+
+            // Skip matches that span multiple lines - patterns with \s can match \n,
+            // which would merge lines when replaced with '*'.repeat(length)
+            if (originalValue.includes('\n')) {
+                continue;
+            }
+
             const matchStart = match.index;
             const matchEnd = matchStart + originalValue.length;
 
